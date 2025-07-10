@@ -1,0 +1,26 @@
+FROM maven:3.9-eclipse-temurin-17-alpine
+
+WORKDIR /app
+
+# Install curl for health checks (using apk for Alpine)
+RUN apk add --no-cache curl
+
+# Copy Maven files
+COPY pom.xml .
+COPY mvnw .
+COPY .mvn .mvn
+
+# Make mvnw executable
+RUN chmod +x ./mvnw
+
+# Download dependencies
+RUN ./mvnw dependency:go-offline -B
+
+# Copy source code
+COPY src src
+
+# Expose ports (8080 for app, 5005 for debugging)
+EXPOSE 8080 5005
+
+# Development with hot reload and debugging
+CMD ["./mvnw", "spring-boot:run", "-Dspring-boot.run.jvmArguments=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"]

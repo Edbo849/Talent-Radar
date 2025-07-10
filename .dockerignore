@@ -1,0 +1,14 @@
+**/.git
+**/.gitignore
+**/README.md
+**/Dockerfile*
+**/docker-compose*
+**/node_modules
+**/target
+**/.DS_Store
+**/.env*
+**/build
+**/.mvn/wrapper/maven-wrapper.jar
+**/*.iml
+**/.idea
+**/.vscode
