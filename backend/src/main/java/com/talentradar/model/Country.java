@@ -1,18 +1,13 @@
 package com.talentradar.model;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
 import java.util.Objects;
-import java.util.Set;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -20,29 +15,23 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 @Entity
-@Table(name = "clubs")
-public class Club {
+@Table(name = "countries")
+public class Country {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "external_id", unique = true)
-    private Integer externalId;
-
-    @Column(nullable = false, length = 100)
-    @NotBlank(message = "Club name is required")
-    @Size(max = 100, message = "Club name must not exceed 100 characters")
+    @Column(nullable = false, length = 100, unique = true)
+    @NotBlank(message = "Country name is required")
+    @Size(max = 100, message = "Country name must not exceed 100 characters")
     private String name;
 
-    @Column(name = "logo_url")
-    private String logoUrl;
+    @Column(length = 3)
+    private String code; // ISO country code
 
-    @Column(length = 50)
-    private String country;
-
-    @Column(name = "is_active")
-    private Boolean isActive = true;
+    @Column(name = "flag_url")
+    private String flagUrl;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -50,15 +39,12 @@ public class Club {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "club", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<PlayerStatistic> playerStatistics = new HashSet<>();
-
-    // Constructors
-    public Club() {
+    public Country() {
     }
 
-    public Club(String name) {
+    public Country(String name, String code) {
         this.name = name;
+        this.code = code;
     }
 
     @PrePersist
@@ -81,14 +67,6 @@ public class Club {
         this.id = id;
     }
 
-    public Integer getExternalId() {
-        return externalId;
-    }
-
-    public void setExternalId(Integer externalId) {
-        this.externalId = externalId;
-    }
-
     public String getName() {
         return name;
     }
@@ -97,28 +75,20 @@ public class Club {
         this.name = name;
     }
 
-    public String getLogoUrl() {
-        return logoUrl;
+    public String getCode() {
+        return code;
     }
 
-    public void setLogoUrl(String logoUrl) {
-        this.logoUrl = logoUrl;
+    public void setCode(String code) {
+        this.code = code;
     }
 
-    public String getCountry() {
-        return country;
+    public String getFlagUrl() {
+        return flagUrl;
     }
 
-    public void setCountry(String country) {
-        this.country = country;
-    }
-
-    public Boolean getIsActive() {
-        return isActive;
-    }
-
-    public void setIsActive(Boolean isActive) {
-        this.isActive = isActive;
+    public void setFlagUrl(String flagUrl) {
+        this.flagUrl = flagUrl;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -137,14 +107,6 @@ public class Club {
         this.updatedAt = updatedAt;
     }
 
-    public Set<PlayerStatistic> getPlayerStatistics() {
-        return playerStatistics;
-    }
-
-    public void setPlayerStatistics(Set<PlayerStatistic> playerStatistics) {
-        this.playerStatistics = playerStatistics;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -153,8 +115,8 @@ public class Club {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        Club club = (Club) o;
-        return Objects.equals(id, club.id);
+        Country country = (Country) o;
+        return Objects.equals(id, country.id);
     }
 
     @Override
@@ -164,10 +126,10 @@ public class Club {
 
     @Override
     public String toString() {
-        return "Club{"
+        return "Country{"
                 + "id=" + id
                 + ", name='" + name + '\''
-                + ", country='" + country + '\''
+                + ", code='" + code + '\''
                 + '}';
     }
 }

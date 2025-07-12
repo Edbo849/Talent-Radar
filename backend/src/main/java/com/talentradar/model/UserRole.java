@@ -2,6 +2,8 @@ package com.talentradar.model;
 
 public enum UserRole {
     USER("User"),
+    SCOUT("Scout"),
+    COACH("Coach"),
     ADMIN("Admin");
 
     private final String description;

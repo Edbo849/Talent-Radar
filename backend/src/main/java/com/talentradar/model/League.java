@@ -1,18 +1,16 @@
 package com.talentradar.model;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
 import java.util.Objects;
-import java.util.Set;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -20,8 +18,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 @Entity
-@Table(name = "clubs")
-public class Club {
+@Table(name = "leagues")
+public class League {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,18 +29,22 @@ public class Club {
     private Integer externalId;
 
     @Column(nullable = false, length = 100)
-    @NotBlank(message = "Club name is required")
-    @Size(max = 100, message = "Club name must not exceed 100 characters")
+    @NotBlank(message = "League name is required")
+    @Size(max = 100, message = "League name must not exceed 100 characters")
     private String name;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "country_id")
+    private Country country;
 
     @Column(name = "logo_url")
     private String logoUrl;
 
-    @Column(length = 50)
-    private String country;
+    @Column
+    private Integer season;
 
-    @Column(name = "is_active")
-    private Boolean isActive = true;
+    @Column(length = 50)
+    private String type;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -50,15 +52,13 @@ public class Club {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "club", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<PlayerStatistic> playerStatistics = new HashSet<>();
-
-    // Constructors
-    public Club() {
+    public League() {
     }
 
-    public Club(String name) {
+    public League(String name, Country country, Integer season) {
         this.name = name;
+        this.country = country;
+        this.season = season;
     }
 
     @PrePersist
@@ -97,6 +97,14 @@ public class Club {
         this.name = name;
     }
 
+    public Country getCountry() {
+        return country;
+    }
+
+    public void setCountry(Country country) {
+        this.country = country;
+    }
+
     public String getLogoUrl() {
         return logoUrl;
     }
@@ -105,20 +113,20 @@ public class Club {
         this.logoUrl = logoUrl;
     }
 
-    public String getCountry() {
-        return country;
+    public Integer getSeason() {
+        return season;
     }
 
-    public void setCountry(String country) {
-        this.country = country;
+    public void setSeason(Integer season) {
+        this.season = season;
     }
 
-    public Boolean getIsActive() {
-        return isActive;
+    public String getType() {
+        return type;
     }
 
-    public void setIsActive(Boolean isActive) {
-        this.isActive = isActive;
+    public void setType(String type) {
+        this.type = type;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -137,14 +145,6 @@ public class Club {
         this.updatedAt = updatedAt;
     }
 
-    public Set<PlayerStatistic> getPlayerStatistics() {
-        return playerStatistics;
-    }
-
-    public void setPlayerStatistics(Set<PlayerStatistic> playerStatistics) {
-        this.playerStatistics = playerStatistics;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -153,8 +153,8 @@ public class Club {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        Club club = (Club) o;
-        return Objects.equals(id, club.id);
+        League league = (League) o;
+        return Objects.equals(id, league.id);
     }
 
     @Override
@@ -164,10 +164,10 @@ public class Club {
 
     @Override
     public String toString() {
-        return "Club{"
+        return "League{"
                 + "id=" + id
                 + ", name='" + name + '\''
-                + ", country='" + country + '\''
+                + ", season=" + season
                 + '}';
     }
 }

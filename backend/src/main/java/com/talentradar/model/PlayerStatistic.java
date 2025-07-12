@@ -1,5 +1,6 @@
 package com.talentradar.model;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
@@ -15,7 +16,6 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 @Entity
@@ -31,17 +31,41 @@ public class PlayerStatistic {
     @NotNull(message = "Player is required")
     private Player player;
 
-    @Column(nullable = false, length = 50)
-    @NotBlank(message = "Season is required")
-    private String season; // e.g., "2023-24"
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "club_id")
+    private Club club;
 
-    @Column(name = "competition", length = 100)
-    private String competition; // e.g., "Premier League", "Champions League"
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "league_id")
+    private League league;
 
+    @Column(nullable = false)
+    @NotNull(message = "Season is required")
+    private Integer season;
+
+    // Basic game stats
     @Column(name = "appearances")
     @Min(value = 0, message = "Appearances cannot be negative")
     private Integer appearances = 0;
 
+    @Column(name = "lineups")
+    @Min(value = 0, message = "Lineups cannot be negative")
+    private Integer lineups = 0;
+
+    @Column(name = "minutes_played")
+    @Min(value = 0, message = "Minutes played cannot be negative")
+    private Integer minutesPlayed = 0;
+
+    @Column(length = 50)
+    private String position;
+
+    @Column(precision = 4, scale = 2)
+    private BigDecimal rating;
+
+    @Column(name = "is_captain")
+    private Boolean isCaptain = false;
+
+    // Goals and assists
     @Column(name = "goals")
     @Min(value = 0, message = "Goals cannot be negative")
     private Integer goals = 0;
@@ -50,9 +74,65 @@ public class PlayerStatistic {
     @Min(value = 0, message = "Assists cannot be negative")
     private Integer assists = 0;
 
-    @Column(name = "minutes_played")
-    @Min(value = 0, message = "Minutes played cannot be negative")
-    private Integer minutesPlayed = 0;
+    @Column(name = "goals_conceded")
+    @Min(value = 0, message = "Goals conceded cannot be negative")
+    private Integer goalsConceded = 0;
+
+    @Column(name = "saves")
+    @Min(value = 0, message = "Saves cannot be negative")
+    private Integer saves = 0;
+
+    // Shots
+    @Column(name = "shots_total")
+    @Min(value = 0, message = "Total shots cannot be negative")
+    private Integer shotsTotal = 0;
+
+    @Column(name = "shots_on_target")
+    @Min(value = 0, message = "Shots on target cannot be negative")
+    private Integer shotsOnTarget = 0;
+
+    // Passes
+    @Column(name = "passes_total")
+    @Min(value = 0, message = "Total passes cannot be negative")
+    private Integer passesTotal = 0;
+
+    @Column(name = "passes_key")
+    @Min(value = 0, message = "Key passes cannot be negative")
+    private Integer passesKey = 0;
+
+    @Column(name = "pass_accuracy", precision = 5, scale = 2)
+    private BigDecimal passAccuracy;
+
+    // Defensive stats
+    @Column(name = "tackles_total")
+    @Min(value = 0, message = "Total tackles cannot be negative")
+    private Integer tacklesTotal = 0;
+
+    @Column(name = "tackles_blocks")
+    @Min(value = 0, message = "Tackle blocks cannot be negative")
+    private Integer tacklesBlocks = 0;
+
+    @Column(name = "interceptions")
+    @Min(value = 0, message = "Interceptions cannot be negative")
+    private Integer interceptions = 0;
+
+    // Dribbles
+    @Column(name = "dribbles_attempts")
+    @Min(value = 0, message = "Dribble attempts cannot be negative")
+    private Integer dribblesAttempts = 0;
+
+    @Column(name = "dribbles_success")
+    @Min(value = 0, message = "Successful dribbles cannot be negative")
+    private Integer dribblesSuccess = 0;
+
+    // Fouls and cards
+    @Column(name = "fouls_drawn")
+    @Min(value = 0, message = "Fouls drawn cannot be negative")
+    private Integer foulsDrawn = 0;
+
+    @Column(name = "fouls_committed")
+    @Min(value = 0, message = "Fouls committed cannot be negative")
+    private Integer foulsCommitted = 0;
 
     @Column(name = "yellow_cards")
     @Min(value = 0, message = "Yellow cards cannot be negative")
@@ -62,25 +142,31 @@ public class PlayerStatistic {
     @Min(value = 0, message = "Red cards cannot be negative")
     private Integer redCards = 0;
 
-    @Column(name = "clean_sheets")
-    @Min(value = 0, message = "Clean sheets cannot be negative")
-    private Integer cleanSheets = 0; // For goalkeepers
+    // Penalties
+    @Column(name = "penalties_won")
+    @Min(value = 0, message = "Penalties won cannot be negative")
+    private Integer penaltiesWon = 0;
 
-    @Column(name = "saves")
-    @Min(value = 0, message = "Saves cannot be negative")
-    private Integer saves = 0; // For goalkeepers
+    @Column(name = "penalties_scored")
+    @Min(value = 0, message = "Penalties scored cannot be negative")
+    private Integer penaltiesScored = 0;
 
-    @Column(name = "pass_accuracy")
-    @Min(value = 0, message = "Pass accuracy cannot be negative")
-    private Double passAccuracy; // Percentage
+    @Column(name = "penalties_missed")
+    @Min(value = 0, message = "Penalties missed cannot be negative")
+    private Integer penaltiesMissed = 0;
 
-    @Column(name = "shots_on_target")
-    @Min(value = 0, message = "Shots on target cannot be negative")
-    private Integer shotsOnTarget = 0;
+    // Substitutions
+    @Column(name = "substitutes_in")
+    @Min(value = 0, message = "Substitutes in cannot be negative")
+    private Integer substitutesIn = 0;
 
-    @Column(name = "total_shots")
-    @Min(value = 0, message = "Total shots cannot be negative")
-    private Integer totalShots = 0;
+    @Column(name = "substitutes_out")
+    @Min(value = 0, message = "Substitutes out cannot be negative")
+    private Integer substitutesOut = 0;
+
+    @Column(name = "substitutes_bench")
+    @Min(value = 0, message = "Substitutes bench cannot be negative")
+    private Integer substitutesBench = 0;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -92,8 +178,10 @@ public class PlayerStatistic {
     public PlayerStatistic() {
     }
 
-    public PlayerStatistic(Player player, String season) {
+    public PlayerStatistic(Player player, Club club, League league, Integer season) {
         this.player = player;
+        this.club = club;
+        this.league = league;
         this.season = season;
     }
 
@@ -130,6 +218,20 @@ public class PlayerStatistic {
         return (double) minutesPlayed / appearances;
     }
 
+    public Double getDribbleSuccessRate() {
+        if (dribblesAttempts == null || dribblesAttempts == 0) {
+            return 0.0;
+        }
+        return (double) dribblesSuccess / dribblesAttempts * 100;
+    }
+
+    public Double getShotAccuracy() {
+        if (shotsTotal == null || shotsTotal == 0) {
+            return 0.0;
+        }
+        return (double) shotsOnTarget / shotsTotal * 100;
+    }
+
     // Getters and Setters
     public Long getId() {
         return id;
@@ -147,20 +249,28 @@ public class PlayerStatistic {
         this.player = player;
     }
 
-    public String getSeason() {
+    public Club getClub() {
+        return club;
+    }
+
+    public void setClub(Club club) {
+        this.club = club;
+    }
+
+    public League getLeague() {
+        return league;
+    }
+
+    public void setLeague(League league) {
+        this.league = league;
+    }
+
+    public Integer getSeason() {
         return season;
     }
 
-    public void setSeason(String season) {
+    public void setSeason(Integer season) {
         this.season = season;
-    }
-
-    public String getCompetition() {
-        return competition;
-    }
-
-    public void setCompetition(String competition) {
-        this.competition = competition;
     }
 
     public Integer getAppearances() {
@@ -169,6 +279,46 @@ public class PlayerStatistic {
 
     public void setAppearances(Integer appearances) {
         this.appearances = appearances;
+    }
+
+    public Integer getLineups() {
+        return lineups;
+    }
+
+    public void setLineups(Integer lineups) {
+        this.lineups = lineups;
+    }
+
+    public Integer getMinutesPlayed() {
+        return minutesPlayed;
+    }
+
+    public void setMinutesPlayed(Integer minutesPlayed) {
+        this.minutesPlayed = minutesPlayed;
+    }
+
+    public String getPosition() {
+        return position;
+    }
+
+    public void setPosition(String position) {
+        this.position = position;
+    }
+
+    public BigDecimal getRating() {
+        return rating;
+    }
+
+    public void setRating(BigDecimal rating) {
+        this.rating = rating;
+    }
+
+    public Boolean getIsCaptain() {
+        return isCaptain;
+    }
+
+    public void setIsCaptain(Boolean isCaptain) {
+        this.isCaptain = isCaptain;
     }
 
     public Integer getGoals() {
@@ -187,12 +337,116 @@ public class PlayerStatistic {
         this.assists = assists;
     }
 
-    public Integer getMinutesPlayed() {
-        return minutesPlayed;
+    public Integer getGoalsConceded() {
+        return goalsConceded;
     }
 
-    public void setMinutesPlayed(Integer minutesPlayed) {
-        this.minutesPlayed = minutesPlayed;
+    public void setGoalsConceded(Integer goalsConceded) {
+        this.goalsConceded = goalsConceded;
+    }
+
+    public Integer getSaves() {
+        return saves;
+    }
+
+    public void setSaves(Integer saves) {
+        this.saves = saves;
+    }
+
+    public Integer getShotsTotal() {
+        return shotsTotal;
+    }
+
+    public void setShotsTotal(Integer shotsTotal) {
+        this.shotsTotal = shotsTotal;
+    }
+
+    public Integer getShotsOnTarget() {
+        return shotsOnTarget;
+    }
+
+    public void setShotsOnTarget(Integer shotsOnTarget) {
+        this.shotsOnTarget = shotsOnTarget;
+    }
+
+    public Integer getPassesTotal() {
+        return passesTotal;
+    }
+
+    public void setPassesTotal(Integer passesTotal) {
+        this.passesTotal = passesTotal;
+    }
+
+    public Integer getPassesKey() {
+        return passesKey;
+    }
+
+    public void setPassesKey(Integer passesKey) {
+        this.passesKey = passesKey;
+    }
+
+    public BigDecimal getPassAccuracy() {
+        return passAccuracy;
+    }
+
+    public void setPassAccuracy(BigDecimal passAccuracy) {
+        this.passAccuracy = passAccuracy;
+    }
+
+    public Integer getTacklesTotal() {
+        return tacklesTotal;
+    }
+
+    public void setTacklesTotal(Integer tacklesTotal) {
+        this.tacklesTotal = tacklesTotal;
+    }
+
+    public Integer getTacklesBlocks() {
+        return tacklesBlocks;
+    }
+
+    public void setTacklesBlocks(Integer tacklesBlocks) {
+        this.tacklesBlocks = tacklesBlocks;
+    }
+
+    public Integer getInterceptions() {
+        return interceptions;
+    }
+
+    public void setInterceptions(Integer interceptions) {
+        this.interceptions = interceptions;
+    }
+
+    public Integer getDribblesAttempts() {
+        return dribblesAttempts;
+    }
+
+    public void setDribblesAttempts(Integer dribblesAttempts) {
+        this.dribblesAttempts = dribblesAttempts;
+    }
+
+    public Integer getDribblesSuccess() {
+        return dribblesSuccess;
+    }
+
+    public void setDribblesSuccess(Integer dribblesSuccess) {
+        this.dribblesSuccess = dribblesSuccess;
+    }
+
+    public Integer getFoulsDrawn() {
+        return foulsDrawn;
+    }
+
+    public void setFoulsDrawn(Integer foulsDrawn) {
+        this.foulsDrawn = foulsDrawn;
+    }
+
+    public Integer getFoulsCommitted() {
+        return foulsCommitted;
+    }
+
+    public void setFoulsCommitted(Integer foulsCommitted) {
+        this.foulsCommitted = foulsCommitted;
     }
 
     public Integer getYellowCards() {
@@ -211,44 +465,52 @@ public class PlayerStatistic {
         this.redCards = redCards;
     }
 
-    public Integer getCleanSheets() {
-        return cleanSheets;
+    public Integer getPenaltiesWon() {
+        return penaltiesWon;
     }
 
-    public void setCleanSheets(Integer cleanSheets) {
-        this.cleanSheets = cleanSheets;
+    public void setPenaltiesWon(Integer penaltiesWon) {
+        this.penaltiesWon = penaltiesWon;
     }
 
-    public Integer getSaves() {
-        return saves;
+    public Integer getPenaltiesScored() {
+        return penaltiesScored;
     }
 
-    public void setSaves(Integer saves) {
-        this.saves = saves;
+    public void setPenaltiesScored(Integer penaltiesScored) {
+        this.penaltiesScored = penaltiesScored;
     }
 
-    public Double getPassAccuracy() {
-        return passAccuracy;
+    public Integer getPenaltiesMissed() {
+        return penaltiesMissed;
     }
 
-    public void setPassAccuracy(Double passAccuracy) {
-        this.passAccuracy = passAccuracy;
+    public void setPenaltiesMissed(Integer penaltiesMissed) {
+        this.penaltiesMissed = penaltiesMissed;
     }
 
-    public Integer getShotsOnTarget() {
-        return shotsOnTarget;
+    public Integer getSubstitutesIn() {
+        return substitutesIn;
     }
 
-    public void setShotsOnTarget(Integer shotsOnTarget) {
-        this.shotsOnTarget = shotsOnTarget;
+    public void setSubstitutesIn(Integer substitutesIn) {
+        this.substitutesIn = substitutesIn;
     }
 
-    public Integer getTotalShots() {
-        return totalShots;
+    public Integer getSubstitutesOut() {
+        return substitutesOut;
     }
 
-    public void setTotalShots(Integer totalShots) {
-        this.totalShots = totalShots;
+    public void setSubstitutesOut(Integer substitutesOut) {
+        this.substitutesOut = substitutesOut;
+    }
+
+    public Integer getSubstitutesBench() {
+        return substitutesBench;
+    }
+
+    public void setSubstitutesBench(Integer substitutesBench) {
+        this.substitutesBench = substitutesBench;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -288,7 +550,7 @@ public class PlayerStatistic {
     public String toString() {
         return "PlayerStatistic{"
                 + "id=" + id
-                + ", season='" + season + '\''
+                + ", season=" + season
                 + ", goals=" + goals
                 + ", assists=" + assists
                 + ", appearances=" + appearances
