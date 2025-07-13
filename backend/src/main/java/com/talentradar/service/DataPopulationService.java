@@ -5,7 +5,9 @@ import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -25,7 +27,7 @@ import jakarta.transaction.Transactional;
 @Service
 public class DataPopulationService {
 
-    private static final Logger logger = LoggerFactory.getLogger(ApiFootballService.class);
+    private static final Logger logger = LoggerFactory.getLogger(DataPopulationService.class);
 
     private static final int CURRENT_SEASON = 2024;
 
@@ -47,15 +49,32 @@ public class DataPopulationService {
     @Autowired
     private PlayerStatisticRepository playerStatisticRepository;
 
+    @Autowired
+    private ApplicationContext applicationContext;
+
     @Async
     public void populateU21PlayersAsync() {
         logger.info("Starting U21 player population process...");
 
+        boolean success = false;
+        String message = "";
+
         try {
             populateU21Players();
+            success = true;
             logger.info("U21 player population completed successfully!");
         } catch (Exception e) {
-            logger.error("Error during U21 player population: " + e.getMessage(), e);
+            message = e.getMessage();
+            logger.error("Error during U21 player population: " + message, e);
+        } finally {
+            // Notify schecduled service that population is complete
+            try {
+                ScheduledTaskService scheduledService = applicationContext.getBean(ScheduledTaskService.class);
+                scheduledService.onPopulationComplete(success, message);
+
+            } catch (BeansException | IllegalStateException e) {
+                logger.warn("Could not notify scheduled service: {}", e.getMessage());
+            }
         }
 
     }
@@ -206,4 +225,5 @@ public class DataPopulationService {
     public long getU21PlayerCount() {
         return playerRepository.countByU21Eligible();
     }
+
 }
