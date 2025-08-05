@@ -1,37 +1,55 @@
-package com.talentradar.model;
+package com.talentradar.model.club;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+/**
+ * Entity representing football leagues and competitions. Stores league
+ * information including name, country, season details, and hierarchical
+ * relationships between different competition levels.
+ */
 @Entity
-@Table(name = "countries")
-public class Country {
+@Table(name = "leagues")
+public class League {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 100, unique = true)
-    @NotBlank(message = "Country name is required")
-    @Size(max = 100, message = "Country name must not exceed 100 characters")
+    @Column(name = "external_id", unique = true)
+    private Integer externalId;
+
+    @Column(nullable = false, length = 100)
+    @NotBlank(message = "League name is required")
+    @Size(max = 100, message = "League name must not exceed 100 characters")
     private String name;
 
-    @Column(length = 3)
-    private String code; // ISO country code
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "country_id")
+    private Country country;
 
-    @Column(name = "flag_url")
-    private String flagUrl;
+    @Column(name = "logo_url")
+    private String logoUrl;
+
+    @Column
+    private Integer season;
+
+    @Column(length = 50)
+    private String type;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -39,12 +57,13 @@ public class Country {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    public Country() {
+    public League() {
     }
 
-    public Country(String name, String code) {
+    public League(String name, Country country, Integer season) {
         this.name = name;
-        this.code = code;
+        this.country = country;
+        this.season = season;
     }
 
     @PrePersist
@@ -67,6 +86,14 @@ public class Country {
         this.id = id;
     }
 
+    public Integer getExternalId() {
+        return externalId;
+    }
+
+    public void setExternalId(Integer externalId) {
+        this.externalId = externalId;
+    }
+
     public String getName() {
         return name;
     }
@@ -75,20 +102,36 @@ public class Country {
         this.name = name;
     }
 
-    public String getCode() {
-        return code;
+    public Country getCountry() {
+        return country;
     }
 
-    public void setCode(String code) {
-        this.code = code;
+    public void setCountry(Country country) {
+        this.country = country;
     }
 
-    public String getFlagUrl() {
-        return flagUrl;
+    public String getLogoUrl() {
+        return logoUrl;
     }
 
-    public void setFlagUrl(String flagUrl) {
-        this.flagUrl = flagUrl;
+    public void setLogoUrl(String logoUrl) {
+        this.logoUrl = logoUrl;
+    }
+
+    public Integer getSeason() {
+        return season;
+    }
+
+    public void setSeason(Integer season) {
+        this.season = season;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -115,8 +158,8 @@ public class Country {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        Country country = (Country) o;
-        return Objects.equals(id, country.id);
+        League league = (League) o;
+        return Objects.equals(id, league.id);
     }
 
     @Override
@@ -126,10 +169,10 @@ public class Country {
 
     @Override
     public String toString() {
-        return "Country{"
+        return "League{"
                 + "id=" + id
                 + ", name='" + name + '\''
-                + ", code='" + code + '\''
+                + ", season=" + season
                 + '}';
     }
 }

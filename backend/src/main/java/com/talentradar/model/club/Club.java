@@ -1,9 +1,11 @@
-package com.talentradar.model;
+package com.talentradar.model.club;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+
+import com.talentradar.model.player.PlayerStatistic;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -12,6 +14,8 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
@@ -19,6 +23,11 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+/**
+ * Entity representing football clubs in the system. Stores club information
+ * including name, logo, founding details, and relationships to players,
+ * leagues, and countries.
+ */
 @Entity
 @Table(name = "clubs")
 public class Club {
@@ -38,17 +47,36 @@ public class Club {
     @Column(name = "logo_url")
     private String logoUrl;
 
-    @Column(length = 50)
-    private String country;
+    @Column(name = "founded_year")
+    private Integer founded;
 
     @Column(name = "is_active")
     private Boolean isActive = true;
+
+    @Column(name = "short_name", length = 10)
+    private String shortName;
+
+    @Column(name = "city", length = 50)
+    private String city;
+
+    @Column(length = 100)
+    private String stadium;
+
+    @Column(name = "stadium_capacity")
+    private Integer stadiumCapacity;
+
+    @Column(name = "website_url", length = 200)
+    private String websiteUrl;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "country_id")
+    private Country country;
 
     @OneToMany(mappedBy = "club", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<PlayerStatistic> playerStatistics = new HashSet<>();
@@ -105,12 +133,20 @@ public class Club {
         this.logoUrl = logoUrl;
     }
 
-    public String getCountry() {
+    public Country getCountry() {
         return country;
     }
 
-    public void setCountry(String country) {
+    public void setCountry(Country country) {
         this.country = country;
+    }
+
+    public Integer getFounded() {
+        return founded;
+    }
+
+    public void setFounded(Integer founded) {
+        this.founded = founded;
     }
 
     public Boolean getIsActive() {
@@ -119,6 +155,46 @@ public class Club {
 
     public void setIsActive(Boolean isActive) {
         this.isActive = isActive;
+    }
+
+    public String getShortName() {
+        return shortName;
+    }
+
+    public void setShortName(String shortName) {
+        this.shortName = shortName;
+    }
+
+    public String getCity() {
+        return city;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
+    }
+
+    public String getStadium() {
+        return stadium;
+    }
+
+    public void setStadium(String stadium) {
+        this.stadium = stadium;
+    }
+
+    public Integer getStadiumCapacity() {
+        return stadiumCapacity;
+    }
+
+    public void setStadiumCapacity(Integer stadiumCapacity) {
+        this.stadiumCapacity = stadiumCapacity;
+    }
+
+    public String getWebsiteUrl() {
+        return websiteUrl;
+    }
+
+    public void setWebsiteUrl(String websiteUrl) {
+        this.websiteUrl = websiteUrl;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -170,4 +246,5 @@ public class Club {
                 + ", country='" + country + '\''
                 + '}';
     }
+
 }
