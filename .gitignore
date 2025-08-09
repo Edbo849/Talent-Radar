@@ -18,6 +18,7 @@ frontend/dist/
 backend/target/
 backend/.mvn/wrapper/maven-wrapper.jar
 backend/.mvn/wrapper/maven-wrapper.properties
+backend/nbactions.xml
 *.class
 *.jar
 *.war
