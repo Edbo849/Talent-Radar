@@ -21,7 +21,7 @@ public class UserUpdateDTO {
     @Size(max = 1000, message = "Bio must not exceed 1000 characters")
     private String bio;
 
-    @Size(max = 200, message = "Organization must not exceed 200 characters")
+    @Size(max = 200, message = "Organisation must not exceed 200 characters")
     private String organisation;
 
     @Size(max = 100, message = "Location must not exceed 100 characters")
@@ -72,11 +72,11 @@ public class UserUpdateDTO {
         this.bio = bio;
     }
 
-    public String getOrganization() {
+    public String getOrganisation() {
         return organisation;
     }
 
-    public void setOrganization(String organisation) {
+    public void setOrganisation(String organisation) {
         this.organisation = organisation;
     }
 

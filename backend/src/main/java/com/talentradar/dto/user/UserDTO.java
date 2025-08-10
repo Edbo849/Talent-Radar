@@ -152,11 +152,11 @@ public class UserDTO {
         this.bio = bio;
     }
 
-    public String getOrganization() {
+    public String getOrganisation() {
         return organisation;
     }
 
-    public void setOrganization(String organisation) {
+    public void setOrganisation(String organisation) {
         this.organisation = organisation;
     }
 

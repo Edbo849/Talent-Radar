@@ -158,11 +158,11 @@ public class GroupMemberDTO {
         this.isVerified = isVerified;
     }
 
-    public String getOrganization() {
+    public String getOrganisation() {
         return organisation;
     }
 
-    public void setOrganization(String organisation) {
+    public void setOrganisation(String organisation) {
         this.organisation = organisation;
     }
 
