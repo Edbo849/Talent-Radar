@@ -5,7 +5,7 @@
   "scripts": {
     "setup": "./setup.sh",
     "dev:frontend": "cd frontend && npm start",
-    "dev:backend": "cd backend && API_FOOTBALL_API_KEY=${API_FOOTBALL_API_KEY} ./mvnw spring-boot:run -Dspring.profiles.active=dev",
+    "dev:backend": "cd backend && source ../.env && ./mvnw spring-boot:run -Dspring.profiles.active=dev",
     "dev:all": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "stop:db": "brew services stop postgresql@15 || sudo systemctl stop postgresql",
     "test:frontend": "cd frontend && npm test",
