@@ -141,7 +141,7 @@ public class PollOption {
         return votes;
     }
 
-    public void setVotest(Set<PollVote> votes) {
+    public void setVotes(Set<PollVote> votes) {
         this.votes = votes;
     }
 

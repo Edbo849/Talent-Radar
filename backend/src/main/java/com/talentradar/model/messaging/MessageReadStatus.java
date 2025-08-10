@@ -72,7 +72,6 @@ public class MessageReadStatus {
     }
 
     public void setReadAt(LocalDateTime readAt) {
-        this.readAt
-                = readAt;
+        this.readAt = readAt;
     }
 }
