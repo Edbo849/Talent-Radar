@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.talentradar.model.messaging.MessageReadStatus;
@@ -26,7 +28,8 @@ public interface MessageReadStatusRepository extends JpaRepository<MessageReadSt
     List<MessageReadStatus> findByMessageId(Long messageId);
 
     // Find all read statuses for a given conversation
-    List<MessageReadStatus> findByConversationId(Long conversationId);
+    @Query("SELECT mrs FROM MessageReadStatus mrs WHERE mrs.message.conversation.id = :conversationId")
+    List<MessageReadStatus> findByConversationId(@Param("conversationId") Long conversationId);
 
     /* Existence check methods */
     // Check if message is read by user

@@ -45,9 +45,6 @@ public interface DiscussionThreadRepository extends JpaRepository<DiscussionThre
     // Find threads by thread type ordered by last activity
     Page<DiscussionThread> findByThreadTypeOrderByLastActivityAtDesc(ThreadType threadType, Pageable pageable);
 
-    // Find threads by thread type, excluding deleted ones
-    Page<DiscussionThread> findByThreadTypeAndIsDeletedFalseOrderByLastActivityAtDesc(ThreadType threadType, Pageable pageable);
-
     /* Author-based finder methods */
     // Find threads by author
     Page<DiscussionThread> findByAuthorOrderByCreatedAtDesc(User author, Pageable pageable);
@@ -77,7 +74,8 @@ public interface DiscussionThreadRepository extends JpaRepository<DiscussionThre
     Page<DiscussionThread> searchByTitleOrContent(@Param("searchTerm") String searchTerm, Pageable pageable);
 
     // Full text search
-    @Query("SELECT dt FROM DiscussionThread dt WHERE MATCH(dt.title, dt.content) AGAINST(:searchTerm IN NATURAL LANGUAGE MODE)")
+    @Query(
+            "SELECT dt FROM DiscussionThread dt WHERE LOWER(dt.title) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR LOWER(dt.content) LIKE LOWER(CONCAT('%', :searchTerm, '%'))")
     Page<DiscussionThread> findByFullTextSearch(@Param("searchTerm") String searchTerm, Pageable pageable);
 
     /* Trending and activity-based finder methods */

@@ -39,7 +39,7 @@ public interface RatingCategoryRepository extends JpaRepository<RatingCategory, 
     /* Search methods */
     // Search categories by name or description
     @Query("SELECT rc FROM RatingCategory rc WHERE LOWER(rc.name) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(rc.description) LIKE LOWER(CONCAT('%', :query, '%'))")
-    List<RatingCategory> findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(@Param("query") String query, @Param("query") String query2);
+    List<RatingCategory> findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(@Param("query") String query);
 
     // Find categories by name pattern
     @Query("SELECT rc FROM RatingCategory rc WHERE LOWER(rc.name) LIKE LOWER(CONCAT('%', :pattern, '%'))")

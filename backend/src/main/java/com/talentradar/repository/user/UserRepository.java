@@ -70,18 +70,18 @@ public interface UserRepository extends JpaRepository<User, Long> {
             + "LOWER(u.username) LIKE LOWER(CONCAT('%', :query, '%')) OR "
             + "LOWER(u.firstName) LIKE LOWER(CONCAT('%', :query, '%')) OR "
             + "LOWER(u.lastName) LIKE LOWER(CONCAT('%', :query, '%')) OR "
-            + "LOWER(u.organization) LIKE LOWER(CONCAT('%', :query, '%'))")
+            + "LOWER(u.organisation) LIKE LOWER(CONCAT('%', :query, '%'))")
     List<User> findByUsernameContainingIgnoreCaseOrFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(
-            @Param("query") String query, @Param("query") String query2, @Param("query") String query3);
+            @Param("query") String query);
 
     // Search users with pagination
     @Query("SELECT u FROM User u WHERE "
             + "LOWER(u.username) LIKE LOWER(CONCAT('%', :query, '%')) OR "
             + "LOWER(u.firstName) LIKE LOWER(CONCAT('%', :query, '%')) OR "
             + "LOWER(u.lastName) LIKE LOWER(CONCAT('%', :query, '%')) OR "
-            + "LOWER(u.organization) LIKE LOWER(CONCAT('%', :query, '%'))")
+            + "LOWER(u.organisation) LIKE LOWER(CONCAT('%', :query, '%'))")
     Page<User> findByUsernameContainingIgnoreCaseOrFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(
-            @Param("query") String query, @Param("query") String query2, @Param("query") String query3, Pageable pageable);
+            @Param("query") String query, Pageable pageable);
 
     /* Expert and moderator queries */
     // Find expert users (by role or high reputation and verification)
@@ -97,13 +97,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT u FROM User u WHERE u.role = 'SCOUT' OR u.role = 'COACH' OR (u.reputationScore >= 50 AND u.isVerified = true)")
     List<User> findExperts();
 
-    /* Organization-based queries */
+    /* Organisation-based queries */
     // Find users by organisation (case-insensitive)
-    List<User> findByOrganizationContainingIgnoreCase(String organisation);
+    List<User> findByOrganisationContainingIgnoreCase(String organisation);
 
     // Get all distinct organisations
-    @Query("SELECT DISTINCT u.organization FROM User u WHERE u.organization IS NOT NULL AND u.organization != '' ORDER BY u.organization")
-    List<String> findDistinctOrganizations();
+    @Query("SELECT DISTINCT u.organisation FROM User u WHERE u.organisation IS NOT NULL AND u.organisation != '' ORDER BY u.organisation")
+    List<String> findDistinctOrganisations();
 
     /* Location-based queries */
     // Find users by location (case-insensitive)

@@ -61,7 +61,7 @@ public interface GroupMemberRepository extends JpaRepository<GroupMember, Long> 
 
     /* Invitation-based finder methods */
     // Find members invited by a specific user
-    List<GroupMember> findByInvitedByUser(User invitedByUser);
+    List<GroupMember> findByInvitedBy(User invitedByUser);
 
     /* Existence and permission check methods */
     // Check if user is member of group

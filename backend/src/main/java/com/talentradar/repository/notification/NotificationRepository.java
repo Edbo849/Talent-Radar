@@ -93,17 +93,17 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     /* Mark notifications as read */
     // Mark all unread notifications as read for a user
     @Modifying
-    @Query("UPDATE Notification n SET n.isRead = true WHERE n.user = :user AND n.isRead = false")
+    @Query("UPDATE Notification n SET n.isRead = true, n.readAt = CURRENT_TIMESTAMP WHERE n.user = :user AND n.isRead = false")
     int markAllAsReadForUser(@Param("user") User user);
 
     // Mark specific notifications as read by IDs
     @Modifying
-    @Query("UPDATE Notification n SET n.isRead = true WHERE n.id IN :notificationIds")
+    @Query("UPDATE Notification n SET n.isRead = true, n.readAt = CURRENT_TIMESTAMP WHERE n.id IN :notificationIds")
     int markAsRead(@Param("notificationIds") List<Long> notificationIds);
 
     // Mark unread notifications as read by type for a user
     @Modifying
-    @Query("UPDATE Notification n SET n.isRead = true WHERE n.user = :user AND n.notificationType = :type AND n.isRead = false")
+    @Query("UPDATE Notification n SET n.isRead = true, n.readAt = CURRENT_TIMESTAMP WHERE n.user = :user AND n.notificationType = :type AND n.isRead = false")
     int markAsReadByType(@Param("user") User user, @Param("type") NotificationType type);
 
     /* Delete old notifications */
@@ -138,8 +138,8 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 
     /* System notifications */
     // Find system notifications since specific time
-    @Query("SELECT n FROM Notification n WHERE n.notificationType = 'SYSTEM' AND n.createdAt >= :since ORDER BY n.createdAt DESC")
-    List<Notification> findSystemNotificationsSince(@Param("since") LocalDateTime since);
+    @Query("SELECT n FROM Notification n WHERE n.notificationType = :systemType AND n.createdAt >= :since ORDER BY n.createdAt DESC")
+    List<Notification> findSystemNotificationsSince(@Param("since") LocalDateTime since, @Param("systemType") NotificationType systemType);
 
     /* Duplicate checking */
     // Check for similar notifications to prevent duplicates

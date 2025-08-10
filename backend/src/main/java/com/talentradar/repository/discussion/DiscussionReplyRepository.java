@@ -118,9 +118,9 @@ public interface DiscussionReplyRepository extends JpaRepository<DiscussionReply
     // Find replies by author created after specific time
     List<DiscussionReply> findByAuthorAndCreatedAtAfter(User author, LocalDateTime since);
 
-    // Find recent replies (top N, not deleted)
+    // Find recent replies
     @Query("SELECT dr FROM DiscussionReply dr WHERE dr.isDeleted = false ORDER BY dr.createdAt DESC")
-    List<DiscussionReply> findTopNByIsDeletedFalseOrderByCreatedAtDesc(@Param("limit") int limit);
+    List<DiscussionReply> findRecentReplies(Pageable pageable);
 
     /* Search methods */
     // Search replies by content

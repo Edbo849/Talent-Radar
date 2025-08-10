@@ -29,17 +29,17 @@ public interface UserGroupRepository extends JpaRepository<UserGroup, Long> {
     Page<UserGroup> findByIsActiveTrueOrderByCreatedAtDesc(Pageable pageable);
 
     // Find groups by creator
-    List<UserGroup> findByCreatedByUser(User user);
+    List<UserGroup> findByCreatedBy(User user);
 
     // Find groups by type
     List<UserGroup> findByGroupType(GroupType groupType);
 
     /* Creator-based finder methods */
     // Find groups created by user and active
-    List<UserGroup> findByCreatedByUserAndIsActiveTrue(User user);
+    List<UserGroup> findByCreatedByAndIsActiveTrue(User user);
 
     // Find groups by creator
-    List<UserGroup> findByCreatedByUserAndIsActiveTrueOrderByCreatedAtDesc(User createdByUser);
+    List<UserGroup> findByCreatedByAndIsActiveTrueOrderByCreatedAtDesc(User createdBy);
 
     /* Type-based finder methods */
     // Find groups by type and active status
@@ -86,7 +86,7 @@ public interface UserGroupRepository extends JpaRepository<UserGroup, Long> {
 
     /* Count methods */
     // Count groups created by user
-    Long countByCreatedByUserAndIsActiveTrue(User createdByUser);
+    Long countByCreatedByAndIsActiveTrue(User createdBy);
 
     // Count active groups
     long countByIsActiveTrue();

@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -48,7 +49,8 @@ public interface PlayerViewRepository extends JpaRepository<PlayerView, Long> {
     // For counting views between two dates
     long countByPlayerAndCreatedAtBetween(Player player, LocalDateTime start, LocalDateTime end);
 
-    @Query("SELECT pv FROM PlayerView pv WHERE pv.player = :player AND pv.createdAt >= :since")
+    // Find player views after specific time
+    @Query("SELECT pv FROM PlayerView pv WHERE pv.player = :player AND pv.viewedAt >= :since")
     List<PlayerView> findByPlayerAndViewedAtAfter(@Param("player") Player player, @Param("since") LocalDateTime since);
 
     /* Ordered and paginated queries */
@@ -80,7 +82,7 @@ public interface PlayerViewRepository extends JpaRepository<PlayerView, Long> {
     /* Trending and popularity analysis */
     // Trending and popular players
     @Query("SELECT pv.player, COUNT(pv) as viewCount FROM PlayerView pv WHERE pv.createdAt >= :since GROUP BY pv.player ORDER BY COUNT(pv) DESC")
-    List<Object[]> findMostViewedPlayersSince(@Param("since") LocalDateTime since);
+    List<Object[]> findMostViewedPlayersSinceList(@Param("since") LocalDateTime since);
 
     @Query("SELECT pv.player, COUNT(pv) as viewCount FROM PlayerView pv GROUP BY pv.player ORDER BY COUNT(pv) DESC")
     Page<Object[]> findMostViewedPlayersAllTime(Pageable pageable);
@@ -152,32 +154,29 @@ public interface PlayerViewRepository extends JpaRepository<PlayerView, Long> {
 
     /* Existence checks */
     // Checks if a recent view exists by user.
-    boolean existsByPlayerIdAndUserIdAndViewedAtAfter(Long playerId, Long userId, LocalDateTime after);
+    boolean existsByPlayerAndUserAndViewedAtAfter(Player player, User user, LocalDateTime after);
 
     // Checks if a recent view exists by IP address.
-    boolean existsByPlayerIdAndIpAddressAndViewedAtAfter(Long playerId, String ipAddress, LocalDateTime after);
+    boolean existsByPlayerAndIpAddressAndViewedAtAfter(Player player, String ipAddress, LocalDateTime after);
 
     /* Additional count methods with IDs */
-    // Counts total views for a player.
-    Long countByPlayerId(Long playerId);
-
     // Counts views after a specific date.
-    Long countByPlayerIdAndViewedAtAfter(Long playerId, LocalDateTime after);
+    long countByPlayerAndViewedAtAfter(Player player, LocalDateTime after);
 
     // Counts distinct users who viewed a player.
     @Query("SELECT COUNT(DISTINCT v.user.id) FROM PlayerView v WHERE v.player.id = :playerId AND v.user IS NOT NULL")
-    Long countDistinctUsersByPlayerId(@Param("playerId") Long playerId);
+    long countDistinctUsersByPlayerId(@Param("playerId") Long playerId);
 
     // Counts distinct anonymous IPs that viewed a player.
     @Query("SELECT COUNT(DISTINCT v.ipAddress) FROM PlayerView v WHERE v.player.id = :playerId AND v.user IS NULL")
-    Long countDistinctAnonymousIpsByPlayerId(@Param("playerId") Long playerId);
+    long countDistinctAnonymousIpsByPlayerId(@Param("playerId") Long playerId);
 
     /* Daily analytics with IDs */
     // Gets daily view counts for a player in the last week. 
     @Query("SELECT DATE(v.viewedAt), COUNT(v) FROM PlayerView v "
-            + "WHERE v.player.id = :playerId AND v.viewedAt >= :since "
+            + "WHERE v.player = :player AND v.viewedAt >= :since "
             + "GROUP BY DATE(v.viewedAt) ORDER BY DATE(v.viewedAt)")
-    List<Object[]> findDailyViewsForPlayerLastWeek(@Param("playerId") Long playerId);
+    List<Object[]> findDailyViewsForPlayerLastWeek(@Param("player") Player player, @Param("since") LocalDateTime since);
 
     // Gets top viewing countries for a player (placeholder - requires geolocation).
     @Query("SELECT 'Unknown' as country, COUNT(v) FROM PlayerView v WHERE v.player.id = :playerId GROUP BY 1")
@@ -185,15 +184,15 @@ public interface PlayerViewRepository extends JpaRepository<PlayerView, Long> {
 
     /* User-specific analytics */
     // Gets recent views by a user.
-    @Query("SELECT v FROM PlayerView v WHERE v.user.id = :userId ORDER BY v.viewedAt DESC")
-    List<PlayerView> findRecentViewsByUser(@Param("userId") Long userId, int limit);
+    @Query(value = "SELECT * FROM player_views v WHERE v.user_id = :userId ORDER BY v.viewed_at DESC LIMIT :limit", nativeQuery = true)
+    List<PlayerView> findRecentViewsByUser(@Param("userId") Long userId, @Param("limit") int limit);
 
     // Counts distinct players viewed by a user.
     @Query("SELECT COUNT(DISTINCT v.player.id) FROM PlayerView v WHERE v.user.id = :userId")
-    Long countDistinctPlayersByUserId(@Param("userId") Long userId);
+    long countDistinctPlayersByUserId(@Param("userId") Long userId);
 
     // Counts views by user after a specific date.
-    Long countByUserIdAndViewedAtAfter(Long userId, LocalDateTime after);
+    long countByUserAndViewedAtAfter(User user, LocalDateTime after);
 
     // Gets most viewed players by a user.
     @Query("SELECT v.player.id, v.player.name, COUNT(v) FROM PlayerView v "
@@ -210,6 +209,7 @@ public interface PlayerViewRepository extends JpaRepository<PlayerView, Long> {
 
     /* Cleanup methods */
     // Cleanup queries for old data
+    @Modifying
     @Query("DELETE FROM PlayerView pv WHERE pv.createdAt < :cutoffDate")
     void deleteViewsOlderThan(@Param("cutoffDate") LocalDateTime cutoffDate);
 }

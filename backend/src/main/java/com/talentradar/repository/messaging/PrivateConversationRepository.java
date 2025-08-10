@@ -70,7 +70,7 @@ public interface PrivateConversationRepository extends JpaRepository<PrivateConv
 
     /* Creator-based finder methods */
     // Find conversations created by user
-    List<PrivateConversation> findByCreatedByUserOrderByCreatedAtDesc(User createdByUser);
+    List<PrivateConversation> findByCreatedByOrderByCreatedAtDesc(User createdBy);
 
     /* Search methods */
     // Search conversations for a user by name

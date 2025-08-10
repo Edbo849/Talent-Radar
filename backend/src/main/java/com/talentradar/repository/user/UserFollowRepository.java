@@ -29,9 +29,6 @@ public interface UserFollowRepository extends JpaRepository<UserFollow, Long> {
     // Check if follow relationship exists
     boolean existsByFollowerAndFollowing(User follower, User following);
 
-    // Check if follow relationship exists (alternative method)
-    boolean existsByFollowerAndFollowed(User follower, User followed);
-
     // Check if user is following another user
     @Query("SELECT CASE WHEN COUNT(uf) > 0 THEN true ELSE false END FROM UserFollow uf WHERE uf.follower = :follower AND uf.following = :following")
     boolean isFollowing(@Param("follower") User follower, @Param("following") User following);
@@ -84,11 +81,11 @@ public interface UserFollowRepository extends JpaRepository<UserFollow, Long> {
     List<User> findFollowersByUser(@Param("user") User user);
 
     // Get followers with pagination (alternative method)
-    @Query("SELECT uf.follower FROM UserFollow uf WHERE uf.followed = :user")
+    @Query("SELECT uf.follower FROM UserFollow uf WHERE uf.following = :user")
     Page<User> findFollowersByUser(@Param("user") User user, Pageable pageable);
 
     // Get following with pagination (alternative method)
-    @Query("SELECT uf.followed FROM UserFollow uf WHERE uf.follower = :user")
+    @Query("SELECT uf.following FROM UserFollow uf WHERE uf.follower = :user")
     Page<User> findFollowingByUser(@Param("user") User user, Pageable pageable);
 
     /* Count methods */
@@ -97,9 +94,6 @@ public interface UserFollowRepository extends JpaRepository<UserFollow, Long> {
 
     // Count users that a user is following
     long countByFollower(User follower);
-
-    // Count followers (alternative method)
-    long countByFollowed(User followed);
 
     /* Recent activity queries */
     // Find recent follows across all users
@@ -185,9 +179,6 @@ public interface UserFollowRepository extends JpaRepository<UserFollow, Long> {
     /* Deletion methods */
     // Delete specific follow relationship
     void deleteByFollowerAndFollowing(User follower, User following);
-
-    // Delete specific follow relationship (alternative method)
-    void deleteByFollowerAndFollowed(User follower, User followed);
 
     // Delete all follow relationships for a user
     @Query("DELETE FROM UserFollow uf WHERE uf.follower = :user OR uf.following = :user")

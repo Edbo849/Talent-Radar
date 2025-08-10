@@ -76,7 +76,7 @@ public interface PollVoteRepository extends JpaRepository<PollVote, Long> {
     List<Object[]> getVoteCountsByOption(@Param("poll") Poll poll);
 
     // Find votes for polls created by a specific user
-    @Query("SELECT pv FROM PollVote pv WHERE pv.poll.createdBy = :user")
+    @Query("SELECT pv FROM PollVote pv WHERE pv.poll.author = :user")
     List<PollVote> findVotesForPollsCreatedBy(@Param("user") User user);
 
     // Get most active voters

@@ -49,10 +49,6 @@ public interface PlayerCommentRepository extends JpaRepository<PlayerComment, Lo
     @Query("SELECT pc FROM PlayerComment pc WHERE pc.isDeleted = false AND (pc.upvotes + pc.downvotes) >= :minVotes ORDER BY (pc.upvotes - pc.downvotes) DESC")
     Page<PlayerComment> findHighEngagementComments(@Param("minVotes") Integer minVotes, Pageable pageable);
 
-    // Find comments with most replies
-    @Query("SELECT pc FROM PlayerComment pc WHERE pc.isDeleted = false AND pc.parentComment IS NULL ORDER BY SIZE(pc.replies) DESC")
-    List<PlayerComment> findCommentsWithMostReplies();
-
     /* Featured comment methods */
     // Find featured comments
     Page<PlayerComment> findByIsFeaturedTrueAndIsDeletedFalseOrderByCreatedAtDesc(Pageable pageable);
@@ -77,8 +73,10 @@ public interface PlayerCommentRepository extends JpaRepository<PlayerComment, Lo
     List<PlayerComment> searchCommentsByContent(@Param("searchTerm") String searchTerm);
 
     // Search comments by content
-    @Query("SELECT pc FROM PlayerComment pc WHERE MATCH(pc.content) AGAINST(:searchTerm IN NATURAL LANGUAGE MODE) AND pc.isDeleted = false")
-    Page<PlayerComment> findByContentSearch(@Param("searchTerm") String searchTerm, Pageable pageable);
+    @Query(value = "SELECT * FROM player_comments pc WHERE MATCH(pc.content) AGAINST(?1 IN NATURAL LANGUAGE MODE) AND pc.is_deleted = false",
+            countQuery = "SELECT count(*) FROM player_comments pc WHERE MATCH(pc.content) AGAINST(?1 IN NATURAL LANGUAGE MODE) AND pc.is_deleted = false",
+            nativeQuery = true)
+    Page<PlayerComment> findByContentSearch(String searchTerm, Pageable pageable);
 
     /* Count methods */
     // Count comments for a player

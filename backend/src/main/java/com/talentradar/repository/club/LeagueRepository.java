@@ -51,7 +51,8 @@ public interface LeagueRepository extends JpaRepository<League, Long> {
 
     /* Country-based finder methods */
     // Find leagues by country name
-    List<League> findByCountryName(String countryName);
+    @Query("SELECT l FROM League l WHERE l.country.name = :countryName")
+    List<League> findByCountryName(@Param("countryName") String countryName);
 
     // Find leagues by country ordered by name
     List<League> findByCountryOrderByNameAsc(Country country);
@@ -68,7 +69,7 @@ public interface LeagueRepository extends JpaRepository<League, Long> {
 
     /* Statistical and aggregation queries */
     // Count clubs by league
-    @Query("SELECT COUNT(c) FROM Club c JOIN c.statistics ps WHERE ps.league = :league")
+    @Query("SELECT COUNT(DISTINCT ps.club) FROM PlayerStatistic ps WHERE ps.league = :league")
     long countClubsByLeague(@Param("league") League league);
 
     // Get distinct types
