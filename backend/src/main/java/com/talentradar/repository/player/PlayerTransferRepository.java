@@ -2,6 +2,7 @@ package com.talentradar.repository.player;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -26,6 +27,15 @@ public interface PlayerTransferRepository extends JpaRepository<PlayerTransfer, 
 
     // Find all transfers for a player ordered by transfer date
     List<PlayerTransfer> findByPlayerOrderByTransferDateDesc(Player player);
+
+    // Find transfer by player, date, and clubs to avoid duplicates.
+    @Query("SELECT pt FROM PlayerTransfer pt WHERE pt.player = :player AND pt.transferDate = :transferDate AND pt.clubFrom = :clubFrom AND pt.clubTo = :clubTo")
+    Optional<PlayerTransfer> findByPlayerAndTransferDateAndClubFromAndClubTo(
+            @Param("player") Player player,
+            @Param("transferDate") LocalDate transferDate,
+            @Param("clubFrom") Club clubFrom,
+            @Param("clubTo") Club clubTo
+    );
 
     /* Club-based finder methods */
     // Find transfers from a specific club
@@ -70,35 +80,6 @@ public interface PlayerTransferRepository extends JpaRepository<PlayerTransfer, 
     // Find transfer window activity (summer/winter)
     @Query("SELECT pt FROM PlayerTransfer pt WHERE MONTH(pt.transferDate) IN (6, 7, 8) OR MONTH(pt.transferDate) IN (1, 2)")
     List<PlayerTransfer> findTransferWindowActivity();
-
-    /* Financial analysis methods */
-    // Find most expensive transfers
-    @Query("SELECT pt FROM PlayerTransfer pt WHERE pt.feeAmount IS NOT NULL ORDER BY pt.feeAmount DESC")
-    List<PlayerTransfer> findMostExpensiveTransfers();
-
-    // Find free transfers
-    @Query("SELECT pt FROM PlayerTransfer pt WHERE pt.feeAmount IS NULL OR pt.feeAmount = 0")
-    List<PlayerTransfer> findFreeTransfers();
-
-    // Find transfers by fee range
-    @Query("SELECT pt FROM PlayerTransfer pt WHERE pt.feeAmount >= :minFee AND pt.feeAmount <= :maxFee")
-    List<PlayerTransfer> findByFeeAmountBetween(@Param("minFee") Long minFee, @Param("maxFee") Long maxFee);
-
-    // Find transfers by currency
-    List<PlayerTransfer> findByCurrency(String currency);
-
-    /* Club financial analysis */
-    // Find highest fee paid by a club
-    @Query("SELECT MAX(pt.feeAmount) FROM PlayerTransfer pt WHERE pt.clubTo = :club AND pt.feeAmount IS NOT NULL")
-    Long findHighestFeeByClub(@Param("club") Club club);
-
-    // Find total transfer spending by a club
-    @Query("SELECT SUM(pt.feeAmount) FROM PlayerTransfer pt WHERE pt.clubTo = :club AND pt.feeAmount IS NOT NULL")
-    Long findTotalSpendingByClub(@Param("club") Club club);
-
-    // Find total transfer income by a club
-    @Query("SELECT SUM(pt.feeAmount) FROM PlayerTransfer pt WHERE pt.clubFrom = :club AND pt.feeAmount IS NOT NULL")
-    Long findTotalIncomeByClub(@Param("club") Club club);
 
     /* Count methods */
     // Count transfers for a player

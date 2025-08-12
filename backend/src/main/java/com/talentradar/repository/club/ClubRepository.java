@@ -29,6 +29,9 @@ public interface ClubRepository extends JpaRepository<Club, Long> {
     // Search clubs by name (case-insensitive)
     List<Club> findByNameContainingIgnoreCase(String name);
 
+    // Find club by name
+    Optional<Club> findByNameIgnoreCase(String name);
+
     // Pagination support for search
     Page<Club> findByNameContainingIgnoreCase(String name, Pageable pageable);
 

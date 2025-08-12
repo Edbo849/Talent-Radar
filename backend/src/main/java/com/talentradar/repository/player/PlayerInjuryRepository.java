@@ -29,13 +29,8 @@ public interface PlayerInjuryRepository extends JpaRepository<PlayerInjury, Long
     List<PlayerInjury> findByPlayerOrderByStartDateDesc(Player player);
 
     /* Status-based finder methods */
-    // Find active injuries for a player
-    List<PlayerInjury> findByPlayerAndIsActiveTrue(Player player);
 
-    // Find all active injuries
-    List<PlayerInjury> findByIsActiveTrue();
-
-    /* Type-based finder methods */
+ /* Type-based finder methods */
     // Find injuries by type
     List<PlayerInjury> findByInjuryType(String injuryType);
 
@@ -57,36 +52,14 @@ public interface PlayerInjuryRepository extends JpaRepository<PlayerInjury, Long
     // Find injuries by fixture ID
     List<PlayerInjury> findByFixtureId(Integer fixtureId);
 
-    /* Time-based finder methods */
-    // Find injuries between dates
-    @Query("SELECT pi FROM PlayerInjury pi WHERE pi.startDate >= :startDate AND pi.startDate <= :endDate")
-    List<PlayerInjury> findByStartDateBetween(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
-
-    // Find injuries that ended in a specific period
-    @Query("SELECT pi FROM PlayerInjury pi WHERE pi.endDate >= :startDate AND pi.endDate <= :endDate")
-    List<PlayerInjury> findByEndDateBetween(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
-
     // Find recent injuries (within specified days)
     @Query("SELECT pi FROM PlayerInjury pi WHERE pi.startDate >= :date ORDER BY pi.startDate DESC")
     List<PlayerInjury> findRecentInjuries(@Param("date") LocalDate date);
 
     /* Long-term and severity analysis */
     // Find long-term injuries (more than specified days)
-    @Query("SELECT pi FROM PlayerInjury pi WHERE pi.isActive = true AND DATEDIFF(CURRENT_DATE, pi.startDate) > :days")
+    @Query("SELECT pi FROM PlayerInjury pi WHERE  DATEDIFF(CURRENT_DATE, pi.startDate) > :days")
     List<PlayerInjury> findLongTermInjuries(@Param("days") int days);
-
-    /* Player status queries */
-    // Find players currently injured
-    @Query("SELECT DISTINCT pi.player FROM PlayerInjury pi WHERE pi.isActive = true")
-    List<Player> findCurrentlyInjuredPlayers();
-
-    // Check if player has active injury
-    boolean existsByPlayerAndIsActiveTrue(Player player);
-
-    /* Count methods */
-    // Count active injuries for a player
-    @Query("SELECT COUNT(pi) FROM PlayerInjury pi WHERE pi.player = :player AND pi.isActive = true")
-    long countActiveInjuriesForPlayer(@Param("player") Player player);
 
     /* Analytics and statistics */
     // Find most common injury types
