@@ -55,14 +55,10 @@ public class PlayerCreateDTO {
     @Size(max = 50, message = "Position must not exceed 50 characters")
     private String position;
 
-    private String preferredFoot;
     private String photoUrl;
 
     // Additional profile information
-    private String bio;
     private Integer jerseyNumber;
-    private Long marketValue;
-    private LocalDate contractExpires;
     private Long currentClubId;
 
     // Constructors
@@ -155,14 +151,6 @@ public class PlayerCreateDTO {
         this.position = position;
     }
 
-    public String getPreferredFoot() {
-        return preferredFoot;
-    }
-
-    public void setPreferredFoot(String preferredFoot) {
-        this.preferredFoot = preferredFoot;
-    }
-
     public String getPhotoUrl() {
         return photoUrl;
     }
@@ -171,36 +159,12 @@ public class PlayerCreateDTO {
         this.photoUrl = photoUrl;
     }
 
-    public String getBio() {
-        return bio;
-    }
-
-    public void setBio(String bio) {
-        this.bio = bio;
-    }
-
     public Integer getJerseyNumber() {
         return jerseyNumber;
     }
 
     public void setJerseyNumber(Integer jerseyNumber) {
         this.jerseyNumber = jerseyNumber;
-    }
-
-    public Long getMarketValue() {
-        return marketValue;
-    }
-
-    public void setMarketValue(Long marketValue) {
-        this.marketValue = marketValue;
-    }
-
-    public LocalDate getContractExpires() {
-        return contractExpires;
-    }
-
-    public void setContractExpires(LocalDate contractExpires) {
-        this.contractExpires = contractExpires;
     }
 
     public Long getCurrentClubId() {

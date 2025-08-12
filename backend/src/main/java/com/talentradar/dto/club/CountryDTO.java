@@ -15,7 +15,7 @@ public class CountryDTO {
     // Country name (required, max 100 characters)
     private String name;
 
-    // ISO country code (max 3 characters)
+    // ISO country code (max 10 characters)
     private String code;
 
     // URL to country flag image

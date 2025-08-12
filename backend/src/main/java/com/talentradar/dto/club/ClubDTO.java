@@ -42,8 +42,8 @@ public class ClubDTO {
     // Stadium capacity
     private Integer stadiumCapacity;
 
-    // Club website URL (max 200 characters)
-    private String websiteUrl;
+    // Whether the club is a national team
+    private Boolean isNational;
 
     // Timestamp when club was created
     private LocalDateTime createdAt;
@@ -159,12 +159,12 @@ public class ClubDTO {
         this.stadiumCapacity = stadiumCapacity;
     }
 
-    public String getWebsiteUrl() {
-        return websiteUrl;
+    public Boolean getIsNational() {
+        return isNational;
     }
 
-    public void setWebsiteUrl(String websiteUrl) {
-        this.websiteUrl = websiteUrl;
+    public void setIsNational(Boolean isNational) {
+        this.isNational = isNational;
     }
 
     public LocalDateTime getCreatedAt() {

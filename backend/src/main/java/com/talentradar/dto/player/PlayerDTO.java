@@ -31,7 +31,6 @@ public class PlayerDTO {
 
     // Physical attributes
     private String position;
-    private String preferredFoot;
     private Integer heightCm;
     private Integer weightKg;
     private String photoUrl;
@@ -42,10 +41,7 @@ public class PlayerDTO {
     private Boolean isEligibleForU21;
 
     // Additional profile information
-    private String bio;
     private Integer jerseyNumber;
-    private Long marketValue;
-    private LocalDate contractExpires;
 
     // Trending and view metrics
     private Double trendingScore;
@@ -171,19 +167,6 @@ public class PlayerDTO {
         return g + a;
     }
 
-    public String getMarketValueDisplay() {
-        if (marketValue == null || marketValue == 0) {
-            return "Unknown";
-        }
-        if (marketValue >= 1000000) {
-            return String.format("€%.1fM", marketValue / 1000000.0);
-        }
-        if (marketValue >= 1000) {
-            return String.format("€%.0fK", marketValue / 1000.0);
-        }
-        return "€" + marketValue;
-    }
-
     // Getters and setters
     public Long getId() {
         return id;
@@ -273,14 +256,6 @@ public class PlayerDTO {
         this.position = position;
     }
 
-    public String getPreferredFoot() {
-        return preferredFoot;
-    }
-
-    public void setPreferredFoot(String preferredFoot) {
-        this.preferredFoot = preferredFoot;
-    }
-
     public Integer getHeightCm() {
         return heightCm;
     }
@@ -329,36 +304,12 @@ public class PlayerDTO {
         this.isEligibleForU21 = isEligibleForU21;
     }
 
-    public String getBio() {
-        return bio;
-    }
-
-    public void setBio(String bio) {
-        this.bio = bio;
-    }
-
     public Integer getJerseyNumber() {
         return jerseyNumber;
     }
 
     public void setJerseyNumber(Integer jerseyNumber) {
         this.jerseyNumber = jerseyNumber;
-    }
-
-    public Long getMarketValue() {
-        return marketValue;
-    }
-
-    public void setMarketValue(Long marketValue) {
-        this.marketValue = marketValue;
-    }
-
-    public LocalDate getContractExpires() {
-        return contractExpires;
-    }
-
-    public void setContractExpires(LocalDate contractExpires) {
-        this.contractExpires = contractExpires;
     }
 
     public Double getTrendingScore() {
