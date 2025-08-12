@@ -3,19 +3,18 @@ package com.talentradar.model.player;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Period;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
 import com.talentradar.model.club.Club;
-import com.talentradar.model.enums.PreferredFoot;
 import com.talentradar.model.scouting.ScoutingReport;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -96,27 +95,14 @@ public class Player {
     @Column(name = "is_active")
     private Boolean isActive = true;
 
-    @Column(columnDefinition = "TEXT")
-    private String bio;
-
     @Column(name = "jersey_number")
     private Integer jerseyNumber;
-
-    @Column(name = "market_value")
-    private Long marketValue;
-
-    @Column(name = "contract_expires")
-    private LocalDate contractExpires;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "preferred_foot", length = 10)
-    private PreferredFoot preferredFoot;
 
     @Column(name = "trending_score")
     private Double trendingScore = 0.0;
@@ -138,7 +124,7 @@ public class Player {
     private Set<ScoutingReport> scoutingReports = new HashSet<>();
 
     @OneToMany(mappedBy = "player", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<PlayerStatistic> statistics = new HashSet<>();
+    private List<PlayerStatistic> statistics = new ArrayList<>();
 
     @OneToMany(mappedBy = "player", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<PlayerInjury> injuries = new HashSet<>();
@@ -380,44 +366,12 @@ public class Player {
         this.scoutingReports = scoutingReports;
     }
 
-    public PreferredFoot getPreferredFoot() {
-        return preferredFoot;
-    }
-
-    public void setPreferredFoot(PreferredFoot preferredFoot) {
-        this.preferredFoot = preferredFoot;
-    }
-
-    public String getBio() {
-        return bio;
-    }
-
-    public void setBio(String bio) {
-        this.bio = bio;
-    }
-
     public Integer getJerseyNumber() {
         return jerseyNumber;
     }
 
     public void setJerseyNumber(Integer jerseyNumber) {
         this.jerseyNumber = jerseyNumber;
-    }
-
-    public Long getMarketValue() {
-        return marketValue;
-    }
-
-    public void setMarketValue(Long marketValue) {
-        this.marketValue = marketValue;
-    }
-
-    public LocalDate getContractExpires() {
-        return contractExpires;
-    }
-
-    public void setContractExpires(LocalDate contractExpires) {
-        this.contractExpires = contractExpires;
     }
 
     public Club getCurrentClub() {
@@ -428,11 +382,11 @@ public class Player {
         this.currentClub = currentClub;
     }
 
-    public Set<PlayerStatistic> getStatistics() {
+    public List<PlayerStatistic> getStatistics() {
         return statistics;
     }
 
-    public void setStatistics(Set<PlayerStatistic> statistics) {
+    public void setStatistics(List<PlayerStatistic> statistics) {
         this.statistics = statistics;
     }
 
@@ -491,6 +445,7 @@ public class Player {
                 + "id=" + id
                 + ", name='" + name + '\''
                 + ", age=" + getAge()
+                + ", currentClub=" + currentClub
                 + '}';
     }
 
