@@ -65,8 +65,8 @@ public class Club {
     @Column(name = "stadium_capacity")
     private Integer stadiumCapacity;
 
-    @Column(name = "website_url", length = 200)
-    private String websiteUrl;
+    @Column(name = "is_national")
+    private Boolean isNational = false;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -189,12 +189,12 @@ public class Club {
         this.stadiumCapacity = stadiumCapacity;
     }
 
-    public String getWebsiteUrl() {
-        return websiteUrl;
+    public Boolean getIsNational() {
+        return isNational;
     }
 
-    public void setWebsiteUrl(String websiteUrl) {
-        this.websiteUrl = websiteUrl;
+    public void setIsNational(Boolean isNational) {
+        this.isNational = isNational;
     }
 
     public LocalDateTime getCreatedAt() {
