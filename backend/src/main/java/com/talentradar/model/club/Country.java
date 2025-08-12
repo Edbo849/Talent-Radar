@@ -32,7 +32,7 @@ public class Country {
     @Size(max = 100, message = "Country name must not exceed 100 characters")
     private String name;
 
-    @Column(length = 3)
+    @Column(length = 10)
     private String code; // ISO country code
 
     @Column(name = "flag_url")
