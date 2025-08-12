@@ -51,12 +51,6 @@ public class PlayerTransfer {
     @Column(name = "transfer_type", length = 20)
     private String transferType;
 
-    @Column(name = "fee_amount")
-    private Long feeAmount;
-
-    @Column(length = 3)
-    private String currency;
-
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -123,22 +117,6 @@ public class PlayerTransfer {
 
     public void setTransferType(String transferType) {
         this.transferType = transferType;
-    }
-
-    public Long getFeeAmount() {
-        return feeAmount;
-    }
-
-    public void setFeeAmount(Long feeAmount) {
-        this.feeAmount = feeAmount;
-    }
-
-    public String getCurrency() {
-        return currency;
-    }
-
-    public void setCurrency(String currency) {
-        this.currency = currency;
     }
 
     public LocalDateTime getCreatedAt() {
