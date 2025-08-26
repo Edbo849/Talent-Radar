@@ -32,6 +32,9 @@ public interface LeagueRepository extends JpaRepository<League, Long> {
     // Search leagues by name (case-insensitive)
     List<League> findByNameContainingIgnoreCase(String name);
 
+    // Search leagues by name with pagination
+    Page<League> findByNameContainingIgnoreCase(String name, Pageable pageable);
+
     // Search leagues by name with ordering
     List<League> findByNameContainingIgnoreCaseOrderByNameAsc(String name);
 

@@ -60,6 +60,17 @@ public interface ClubRepository extends JpaRepository<Club, Long> {
     @Query("SELECT DISTINCT ps.club FROM PlayerStatistic ps WHERE ps.league = :league AND ps.season = (SELECT MAX(ps2.season) FROM PlayerStatistic ps2 WHERE ps2.club = ps.club)")
     List<Club> findByCurrentLeague(@Param("league") League league);
 
+    @Query("SELECT DISTINCT ps.club FROM PlayerStatistic ps WHERE ps.league = :league AND ps.season = (SELECT MAX(ps2.season) FROM PlayerStatistic ps2 WHERE ps2.club = ps.club)")
+    List<Club> findByCurrentLeague(@Param("league") League league, Pageable pageable);
+
+    // Find clubs by league name through player statistics
+    @Query("SELECT DISTINCT ps.club FROM PlayerStatistic ps WHERE ps.league.name = :leagueName")
+    List<Club> findByLeagueName(@Param("leagueName") String leagueName);
+
+    // Pagination support for league name search
+    @Query("SELECT DISTINCT ps.club FROM PlayerStatistic ps WHERE ps.league.name = :leagueName")
+    Page<Club> findByLeagueName(@Param("leagueName") String leagueName, Pageable pageable);
+
     /* Statistical and aggregation methods */
     // Statistical methods
     long countByIsActiveTrue();
