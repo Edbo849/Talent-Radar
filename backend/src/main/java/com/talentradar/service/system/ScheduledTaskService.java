@@ -1,17 +1,12 @@
 package com.talentradar.service.system;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.scheduling.TaskScheduler;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import com.talentradar.service.external.DataPopulationService;
@@ -29,9 +24,6 @@ public class ScheduledTaskService {
     @Qualifier("externalDataPopulationService")
     private DataPopulationService dataPopulationService;
 
-    @Autowired
-    private TaskScheduler taskScheduler;
-
     private volatile boolean isPopulationRunning = false;
     private volatile LocalDateTime lastRunTime;
     private volatile String lastRunStatus = "Never run";
@@ -39,7 +31,6 @@ public class ScheduledTaskService {
     /**
      * Retrieves the current status of scheduled tasks.
      */
-    @Scheduled(cron = "0 0 2 * * ?")
     public void scheduledDataPopulation() {
         if (isPopulationRunning) {
             logger.warn("Data population is already running, skipping this scheduled execution");
@@ -71,23 +62,6 @@ public class ScheduledTaskService {
             // We don't set isPopulationRunning to false here because the actual 
             // population runs asynchronously. We'll handle that in the completion callback.
         }
-    }
-
-    /**
-     * Schedules the data population to resume tomorrow when API limits reset.
-     */
-    public void schedulePopulationForTomorrow() {
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime tomorrow = now.toLocalDate().plusDays(1).atTime(LocalTime.of(0, 5)); // 5 minutes past midnight
-
-        long delayInSeconds = ChronoUnit.SECONDS.between(now, tomorrow);
-
-        logger.info("Scheduling data population to resume in {} seconds at {}", delayInSeconds, tomorrow);
-
-        taskScheduler.schedule(() -> {
-            logger.info("Daily API limit has reset. Resuming data population...");
-            dataPopulationService.populateU21PlayersAsync();
-        }, Instant.now().plusSeconds(delayInSeconds));
     }
 
     /**
@@ -150,7 +124,15 @@ public class ScheduledTaskService {
                 lastRunStatus = message != null && !message.trim().isEmpty()
                         ? "Failed: " + message.trim()
                         : "Failed: Unknown error";
+
                 logger.error("Data population failed: {}", lastRunStatus);
+
+                // If it's an API limit issue, provide manual restart instructions
+                if (message != null && message.toLowerCase().contains("api limit")) {
+                    logger.warn("=== API LIMIT REACHED ===");
+                    logger.warn("Wait Until Tomorrow to Populate Again!");
+                    logger.warn("================================");
+                }
             }
 
         } catch (SecurityException e) {
