@@ -1,8 +1,7 @@
 package com.talentradar.service.external;
 
 import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.temporal.ChronoUnit;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -12,8 +11,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Primary;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -89,6 +90,15 @@ public class DataPopulationService {
     private int apiCallCounter = 0;
 
     /**
+     * Automatically trigger data population when the application is ready
+     */
+    @EventListener(ApplicationReadyEvent.class)
+    public void onApplicationReady() {
+        logger.info("Application ready. Triggering data population...");
+        populateU21PlayersAsync();
+    }
+
+    /**
      * Asynchronously populates the database with U21 player data.
      */
     @Async
@@ -161,23 +171,30 @@ public class DataPopulationService {
      * Handles the daily API limit being reached by scheduling continuation for
      * tomorrow.
      */
+    /**
+     * Handles the daily API limit being reached by stopping data population.
+     */
     private void handleDailyLimitReached() {
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime tomorrow = now.toLocalDate().plusDays(1).atTime(LocalTime.of(0, 5)); // 5 minutes past midnight
 
-        long hoursUntilReset = ChronoUnit.HOURS.between(now, tomorrow);
-        long minutesUntilReset = ChronoUnit.MINUTES.between(now, tomorrow) % 60;
+        logger.warn("=== DAILY API LIMIT REACHED ===");
+        logger.warn("Data population has been STOPPED due to API limit.");
+        logger.warn("Total API calls made: {}/{}", apiCallCounter, MAX_API_CALLS);
+        logger.warn("Time stopped: {}", now.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+        logger.warn("To resume data population, use the manual trigger endpoint:");
+        logger.warn("POST /api/admin/scheduled-tasks/trigger-population");
+        logger.warn("===============================");
 
-        logger.info("Daily API limit reached. Data population will resume tomorrow at {} (in {} hours and {} minutes)",
-                tomorrow, hoursUntilReset, minutesUntilReset);
-
-        // Schedule the task to resume tomorrow via the ScheduledTaskService
+        // Mark as completed with failure message for the scheduled service
         try {
             ScheduledTaskService scheduledService = applicationContext.getBean(ScheduledTaskService.class);
-            scheduledService.schedulePopulationForTomorrow();
+            scheduledService.onPopulationComplete(false, "Stopped due to daily API limit reached");
         } catch (BeansException e) {
-            logger.error("Error scheduling population for tomorrow: {}", e.getMessage());
+            logger.error("Error notifying scheduled service: {}", e.getMessage());
         }
+
+        // Throw exception to stop the current population process
+        throw new RuntimeException("Data population stopped - daily API limit reached");
     }
 
     /**
@@ -1018,6 +1035,7 @@ public class DataPopulationService {
             logger.error("Error saving country {}: {}",
                     country != null ? country.getName() : "null", e.getMessage(), e);
             return null;
+
         }
     }
 
@@ -1026,7 +1044,8 @@ public class DataPopulationService {
      */
     private void notifyScheduledService(boolean success, String message) {
         try {
-            ScheduledTaskService scheduledService = applicationContext.getBean(ScheduledTaskService.class);
+            ScheduledTaskService scheduledService = applicationContext.getBean(ScheduledTaskService.class
+            );
             scheduledService.onPopulationComplete(success, message);
         } catch (BeansException | IllegalStateException e) {
             logger.warn("Could not notify scheduled service: {}", e.getMessage());
