@@ -281,7 +281,8 @@ public class ApiFootballService {
         List<League> leagues = new ArrayList<>();
 
         // Get major leagues that likely have U21 players
-        int[] leagueIds = {292, 98, 113, 307};
+        // Only leagues here that need to be populated, otherwise leave blank!
+        int[] leagueIds = {42, 333, 286, 283};
 
         // All leagues being used
         /* ids: names = {
@@ -297,7 +298,7 @@ public class ApiFootballService {
         128: Liga Profesional Argentina (Argentina),
         702: Premier League 2 (England),
         141: Segunda División (Spain),
-        119: Superliga (Argentina),
+        119: Superliga (Denmark),
         253: MLS (USA),
         203: Super Lig (Turkey),
         103: Eliteserien (Norway),
@@ -312,9 +313,22 @@ public class ApiFootballService {
         98: J1 League (Japan),
         113: Allsvenskan (Sweden),
         307: Saudi Pro League (Saudi Arabia),
+        144: Jupiler Pro League (Belgium),
         345: Czech Liga (Czech Republic),
         179: Premiership (Scotland),
         106: Ekstraklasa (Poland),
+        41:  League One (England),
+        42:  League Two (England),
+        333: Premier League (Ukraine),
+        286: Super Liga (Serbia),
+        283: Liga I (Romania),
+        268: Primera División - Apertura (Uruguay),
+        270: Primera División - Clausura (Uruguay),
+        239: Primera A (Colombia),
+        288: Premier Soccer League (South Africa),
+        188: A-League (Australia),
+        265: Primera División (Chile),
+        242: Liga Pro (Ecuador)
         }*/
         for (int leagueId : leagueIds) {
             try {
