@@ -125,7 +125,7 @@ public class ScheduledTaskService {
                         ? "Failed: " + message.trim()
                         : "Failed: Unknown error";
 
-                logger.error("Data population failed: {}", lastRunStatus);
+                logger.error("Data population ended: {}", lastRunStatus);
 
                 // If it's an API limit issue, provide manual restart instructions
                 if (message != null && message.toLowerCase().contains("api limit")) {
