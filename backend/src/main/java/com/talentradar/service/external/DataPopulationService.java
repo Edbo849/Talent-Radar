@@ -51,7 +51,7 @@ import jakarta.transaction.Transactional;
 public class DataPopulationService {
 
     private static final Logger logger = LoggerFactory.getLogger(DataPopulationService.class);
-    private static final int CURRENT_SEASON = 2024;
+    private static final int CURRENT_SEASON = 2025;
     private static final int MAX_API_CALLS = 75000;
 
     @Autowired
@@ -209,12 +209,27 @@ public class DataPopulationService {
             // Get ALL U21 player IDs from this league using pagination
             List<Integer> playerIds = apiFootballService.getPlayerIdsFromLeague(
                     savedLeague.getExternalId(), CURRENT_SEASON);
+            int seasonUsed = CURRENT_SEASON;
 
             // Count this as multiple API calls due to pagination
             apiCallCounter += Math.max(1, playerIds.size() / 20); // Estimate API calls based on typical page size
 
+            // If no players found in 2025, try 2024
             if (playerIds.isEmpty()) {
-                logger.warn("No U21 players found for league: {}", league.getName());
+                logger.info("No U21 players found for league: {} in season {}",
+                        league.getName(), CURRENT_SEASON);
+
+                seasonUsed = 2024;
+                playerIds = apiFootballService.getPlayerIdsFromLeague(
+                        savedLeague.getExternalId(), seasonUsed);
+
+                // Count additional API calls
+                apiCallCounter += Math.max(1, playerIds.size() / 20);
+            }
+
+            if (playerIds.isEmpty()) {
+                logger.warn("No U21 players found for league: {} in season {}",
+                        league.getName(), 2024);
                 return;
             }
 
@@ -222,7 +237,7 @@ public class DataPopulationService {
                     playerIds.size(), league.getName());
 
             // Get all teams from this league
-            List<Club> leagueClubs = getLeagueClubs(savedLeague);
+            List<Club> leagueClubs = getLeagueClubs(savedLeague, seasonUsed);
             logger.info("Retrieved {} clubs from league {}\n", leagueClubs.size(), league.getName());
 
             // Process each player with comprehensive data across all seasons
@@ -271,7 +286,7 @@ public class DataPopulationService {
     /**
      * Get all clubs from a league for club determination
      */
-    private List<Club> getLeagueClubs(League league) {
+    private List<Club> getLeagueClubs(League league, int season) {
         try {
             // First try to get clubs from existing statistics
             List<Club> existingClubs = clubRepository.findByCurrentLeague(league);
@@ -279,8 +294,8 @@ public class DataPopulationService {
                 return existingClubs;
             }
 
-            // If no existing clubs, fetch from API
-            List<Club> apiClubs = apiFootballService.getTeamsFromLeague(league.getExternalId(), CURRENT_SEASON);
+            // If no existing clubs, fetch from API using the specified season
+            List<Club> apiClubs = apiFootballService.getTeamsFromLeague(league.getExternalId(), season);
             apiCallCounter++;
 
             // Save the clubs
@@ -299,7 +314,7 @@ public class DataPopulationService {
             return savedClubs;
 
         } catch (Exception e) {
-            logger.error("Error getting clubs for league {}: {}", league.getName(), e.getMessage());
+            logger.error("Error getting clubs for league {} for season {}: {}", league.getName(), season, e.getMessage());
             return new ArrayList<>();
         }
     }
@@ -487,6 +502,7 @@ public class DataPopulationService {
     /**
      * Determines if a league/competition is national team based
      */
+    @Transactional
     private boolean isNationalCompetition(League league) {
         if (league == null || league.getName() == null) {
             return false;
@@ -494,19 +510,54 @@ public class DataPopulationService {
 
         String leagueName = league.getName().toLowerCase();
 
-        // Get country name safely to avoid lazy loading issues
-        String countryName = "";
-        try {
-            if (league.getCountry() != null) {
-                countryName = league.getCountry().getName().toLowerCase();
-            }
-        } catch (Exception e) {
-            // Ignore lazy loading issues
-        }
+        // Look for clear international competition patterns in league name
+        boolean hasInternationalKeywords = leagueName.contains("uefa")
+                || leagueName.contains("fifa")
+                || leagueName.contains("conmebol")
+                || leagueName.contains("ofc")
+                || leagueName.contains("afc")
+                || leagueName.contains("caf")
+                || leagueName.contains("world")
+                || leagueName.contains("nations")
+                || leagueName.contains("euro")
+                || leagueName.contains("copa")
+                || leagueName.contains("asia")
+                || leagueName.contains("africa")
+                || leagueName.contains("international")
+                || leagueName.contains("olympics")
+                || leagueName.contains("olympic")
+                || leagueName.contains("agcff")
+                || leagueName.contains("aff")
+                || leagueName.contains("baltic")
+                || leagueName.contains("concacaf")
+                || leagueName.contains("cecafa")
+                || leagueName.contains("asean")
+                || leagueName.contains("caribbean")
+                || leagueName.contains("cafa")
+                || leagueName.contains("confederations")
+                || leagueName.contains("cosafa")
+                || leagueName.contains("eaff")
+                || leagueName.contains("cotif")
+                || leagueName.contains("friendlies")
+                || leagueName.contains("gulf")
+                || leagueName.contains("waff")
+                || leagueName.contains("u20 elite league")
+                || leagueName.contains("atlantic")
+                || leagueName.contains("sudamericano")
+                || leagueName.contains("saff")
+                || leagueName.contains("south american")
+                || leagueName.contains("european")
+                || leagueName.contains("american")
+                || leagueName.contains("pacific")
+                || leagueName.contains("mediterranean")
+                || leagueName.contains("asian")
+                || leagueName.contains("african")
+                || leagueName.contains("arabic")
+                || leagueName.contains("conmenbol")
+                || leagueName.contains("viareggio")
+                || leagueName.contains("arab");
 
-        // Check for common national competition patterns
-        return ((countryName.equals("world") && leagueName.contains("U1")) || leagueName.contains("U2"));
-
+        return hasInternationalKeywords;
     }
 
     /**
