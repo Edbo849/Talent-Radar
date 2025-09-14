@@ -52,7 +52,7 @@ public class DataPopulationService {
 
     private static final Logger logger = LoggerFactory.getLogger(DataPopulationService.class);
     private static final int CURRENT_SEASON = 2024;
-    private static final int MAX_API_CALLS = 7400;
+    private static final int MAX_API_CALLS = 75000;
 
     @Autowired
     private ApiFootballService apiFootballService;
@@ -384,6 +384,15 @@ public class DataPopulationService {
      */
     private Club determinePlayerCurrentClubForLeague(Player player, League league, List<Club> leagueClubs) {
         try {
+
+            // Check if this is a national team competition
+            boolean isNationalCompetition = isNationalCompetition(league);
+
+            if (isNationalCompetition) {
+                // For national competitions, find the player's actual club team
+                return determineActualClubForNationalCompetition(player);
+            }
+
             // PRIORITY 1: Find the player's club within THIS specific league for the current season
             if (player.getStatistics() != null && !player.getStatistics().isEmpty()) {
 
@@ -460,7 +469,6 @@ public class DataPopulationService {
                 Club fallbackClub = leagueClubs.get(0);
                 Club processedClub = processClubForStatistics(fallbackClub, null);
                 if (processedClub != null && processedClub.getId() != null) {
-                    logger.debug("Using fallback club from league {}: {}", league.getName(), processedClub.getName());
                     return processedClub;
                 }
             }
@@ -474,6 +482,97 @@ public class DataPopulationService {
             logger.error("Error determining current club for player in league {}: {}", league.getName(), e.getMessage());
             return getOrCreateFreeAgentClub();
         }
+    }
+
+    /**
+     * Determines if a league/competition is national team based
+     */
+    private boolean isNationalCompetition(League league) {
+        if (league == null || league.getName() == null) {
+            return false;
+        }
+
+        String leagueName = league.getName().toLowerCase();
+
+        // Get country name safely to avoid lazy loading issues
+        String countryName = "";
+        try {
+            if (league.getCountry() != null) {
+                countryName = league.getCountry().getName().toLowerCase();
+            }
+        } catch (Exception e) {
+            // Ignore lazy loading issues
+        }
+
+        // Check for common national competition patterns
+        return ((countryName.equals("world") && leagueName.contains("U1")) || leagueName.contains("U2"));
+
+    }
+
+    /**
+     * Finds the player's actual club team when discovered through national
+     * competition
+     */
+    private Club determineActualClubForNationalCompetition(Player player) {
+        if (player.getStatistics() == null || player.getStatistics().isEmpty()) {
+            return getOrCreateFreeAgentClub();
+        }
+
+        // Find most recent NON-NATIONAL team statistics
+        Optional<PlayerStatistic> mostRecentClubStat = player.getStatistics().stream()
+                .filter(stat -> stat.getClub() != null && !isNationalTeam(stat.getClub()))
+                .filter(stat -> stat.getLeague() != null && !isNationalCompetition(stat.getLeague()))
+                .max((s1, s2) -> {
+                    Integer season1 = s1.getSeason();
+                    Integer season2 = s2.getSeason();
+                    int value1 = season1 != null ? season1 : 0;
+                    int value2 = season2 != null ? season2 : 0;
+                    return Integer.compare(value1, value2);
+                });
+
+        if (mostRecentClubStat.isPresent()) {
+            Club clubTeam = mostRecentClubStat.get().getClub();
+            Club processedClub = processClubForStatistics(clubTeam, null);
+            if (processedClub != null && processedClub.getId() != null) {
+                return processedClub;
+            }
+        }
+
+        // If no club team found, try to get additional seasons data
+        return findClubFromAdditionalSeasons(player);
+    }
+
+    /**
+     * Attempts to find club team by fetching additional seasons if needed
+     */
+    private Club findClubFromAdditionalSeasons(Player player) {
+        try {
+            // Get more comprehensive player data if we don't have enough seasons
+            List<Integer> playerSeasons = apiFootballService.getPlayerSeasons(player.getExternalId());
+            apiCallCounter++;
+
+            // Look for club teams in recent seasons
+            for (Integer season : playerSeasons.subList(0, Math.min(3, playerSeasons.size()))) {
+                List<PlayerStatistic> seasonStats = apiFootballService.getPlayerStatisticsBySeason(
+                        player.getExternalId(), season);
+                apiCallCounter++;
+
+                for (PlayerStatistic stat : seasonStats) {
+                    if (stat.getClub() != null && !isNationalTeam(stat.getClub())
+                            && stat.getLeague() != null && !isNationalCompetition(stat.getLeague())) {
+
+                        Club processedClub = processClubForStatistics(stat.getClub(), null);
+                        if (processedClub != null && processedClub.getId() != null) {
+                            return processedClub;
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            logger.warn("Error fetching additional seasons for club determination: {}", e.getMessage());
+        }
+
+        return getOrCreateFreeAgentClub();
     }
 
     /**
