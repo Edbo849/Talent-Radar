@@ -42,7 +42,6 @@ import com.talentradar.model.player.PlayerTrophy;
 public class ApiFootballService {
 
     private static final Logger logger = LoggerFactory.getLogger(ApiFootballService.class);
-    private static final int RATE_LIMIT_DELAY = 1; // 1 second between requests
     private static final int MAX_RETRY_ATTEMPTS = 3; // Maximum retry attempts
     private static final int BASE_RETRY_DELAY = 3000; // Base delay for retries (3 seconds)
 
@@ -72,7 +71,7 @@ public class ApiFootballService {
         long timeSinceLastRequest = currentTime - lastRequestTime;
 
         // Calculate delay based on attempt number (exponential backoff for retries)
-        long requiredDelay = RATE_LIMIT_DELAY * 1000; // Normal rate limit
+        long requiredDelay = 150; // Normal rate limit
 
         if (attemptNumber > 1) {
             // Exponential backoff for retries: 2s, 4s, 8s, etc.
@@ -282,54 +281,8 @@ public class ApiFootballService {
 
         // Get major leagues that likely have U21 players
         // Only leagues here that need to be populated, otherwise leave blank!
-        int[] leagueIds = {42, 333, 286, 283};
+        int[] leagueIds = {1128};
 
-        // All leagues being used
-        /* ids: names = {
-        39:  Premier League (England),
-        61:  Ligue 1 (France),
-        78:  Bundesliga (Germany),
-        135: Serie A (Italy),
-        140: La Liga (Spain),
-        40:  EFL Championship (England),
-        88:  Eredivisie (Netherlands),
-        94:  Liga Portugal (Portugal),
-        71:  Serie A (Brazil),
-        128: Liga Profesional Argentina (Argentina),
-        702: Premier League 2 (England),
-        141: Segunda División (Spain),
-        119: Superliga (Denmark),
-        253: MLS (USA),
-        203: Super Lig (Turkey),
-        103: Eliteserien (Norway),
-        197: Super League (Greece),
-        262: Liga MX (Mexico),
-        236: First League (Russia),
-        207: Super League (Switzerland),
-        79:  2. Bundesliga (Germany),
-        218: Bundesliga (Austria),
-        210: HNL (Croatia),
-        292: K League 1 (South Korea),
-        98: J1 League (Japan),
-        113: Allsvenskan (Sweden),
-        307: Saudi Pro League (Saudi Arabia),
-        144: Jupiler Pro League (Belgium),
-        345: Czech Liga (Czech Republic),
-        179: Premiership (Scotland),
-        106: Ekstraklasa (Poland),
-        41:  League One (England),
-        42:  League Two (England),
-        333: Premier League (Ukraine),
-        286: Super Liga (Serbia),
-        283: Liga I (Romania),
-        268: Primera División - Apertura (Uruguay),
-        270: Primera División - Clausura (Uruguay),
-        239: Primera A (Colombia),
-        288: Premier Soccer League (South Africa),
-        188: A-League (Australia),
-        265: Primera División (Chile),
-        242: Liga Pro (Ecuador)
-        }*/
         for (int leagueId : leagueIds) {
             try {
                 JsonNode response = makeApiCall("/leagues?id=" + leagueId);
