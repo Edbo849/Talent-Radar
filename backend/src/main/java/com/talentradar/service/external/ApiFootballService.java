@@ -281,7 +281,7 @@ public class ApiFootballService {
 
         // Get major leagues that likely have U21 players
         // Only leagues here that need to be populated, otherwise leave blank!
-        int[] leagueIds = {1128};
+        int[] leagueIds = {};
 
         for (int leagueId : leagueIds) {
             try {
