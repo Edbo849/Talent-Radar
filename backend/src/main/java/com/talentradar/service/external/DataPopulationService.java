@@ -132,7 +132,8 @@ public class DataPopulationService {
         try {
             List<League> topLeagues = apiFootballService.getTopLeagues();
             if (topLeagues.isEmpty()) {
-                throw new RuntimeException("No leagues retrieved from API");
+                logger.warn("No leagues retrieved from API - skipping data population");
+                return;
             }
 
             apiCallCounter += topLeagues.size(); // Count league API calls

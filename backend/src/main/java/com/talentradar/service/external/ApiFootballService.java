@@ -283,6 +283,10 @@ public class ApiFootballService {
         // Only leagues here that need to be populated, otherwise leave blank!
         int[] leagueIds = {};
 
+        if (leagueIds.length == 0) {
+            return leagues;
+        }
+
         for (int leagueId : leagueIds) {
             try {
                 JsonNode response = makeApiCall("/leagues?id=" + leagueId);

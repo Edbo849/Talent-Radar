@@ -21,9 +21,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.talentradar.dto.user.UserCreateDTO;
 import com.talentradar.dto.user.UserDTO;
+import com.talentradar.dto.user.UserLoginDTO;
+import com.talentradar.dto.user.UserLoginResponseDTO;
 import com.talentradar.dto.user.UserUpdateDTO;
 import com.talentradar.exception.UserNotFoundException;
 import com.talentradar.model.user.User;
+import com.talentradar.service.auth.AuthenticationService;
 import com.talentradar.service.user.UserService;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -43,21 +46,18 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private AuthenticationService authenticationService;
+
     /**
      * Registers a new user account.
      */
     @PostMapping("/register")
-    public ResponseEntity<UserDTO> register(@Valid @RequestBody UserCreateDTO createDTO) {
+    public ResponseEntity<UserLoginResponseDTO> register(@Valid @RequestBody UserCreateDTO createDTO) {
         try {
-            User user = userService.createUser(
-                    createDTO.getUsername(),
-                    createDTO.getEmail(),
-                    createDTO.getPassword(),
-                    createDTO.getRole()
-            );
-
-            logger.info("New user registered: {}", user.getUsername());
-            return ResponseEntity.ok(convertToDTO(user));
+            UserLoginResponseDTO response = authenticationService.registerUser(createDTO);
+            logger.info("New user registered: {}", createDTO.getUsername());
+            return ResponseEntity.ok(response);
 
         } catch (IllegalArgumentException e) {
             logger.error("Invalid user registration data: {}", e.getMessage());
@@ -72,14 +72,17 @@ public class UserController {
      * Authenticates user login.
      */
     @PostMapping("/login")
-    public ResponseEntity<Object> login(@RequestBody Object loginRequest) {
+    public ResponseEntity<UserLoginResponseDTO> login(@Valid @RequestBody UserLoginDTO loginDTO) {
         try {
-            // TODO: Implement actual login logic with authentication
-            logger.info("Login attempt received");
-            return ResponseEntity.ok().build();
+            UserLoginResponseDTO response = authenticationService.authenticateUser(loginDTO);
+            logger.info("User login successful: {}", loginDTO.getUsernameOrEmail());
+            return ResponseEntity.ok(response);
 
+        } catch (IllegalArgumentException e) {
+            logger.error("Login failed for user {}: {}", loginDTO.getUsernameOrEmail(), e.getMessage());
+            throw e;
         } catch (Exception e) {
-            logger.error("Error during login: {}", e.getMessage(), e);
+            logger.error("Error during login for user {}: {}", loginDTO.getUsernameOrEmail(), e.getMessage(), e);
             throw new RuntimeException("Login failed", e);
         }
     }
