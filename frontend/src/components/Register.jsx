@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import "./static/Auth.css";
+import "../utilities.css";
 
 /**
  * Register component for user signup.
@@ -119,97 +120,135 @@ const Register = ({ onToggleMode, onSuccess }) => {
 
   // Render registration form
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <div className="auth-header">
-          <h2>🎯 Join Talent Radar</h2>
-          <p>Create your account</p>
+    <div className="auth-container flex items-center justify-center bg-navy text-white min-h-full">
+      <div className="auth-card bg-white rounded-2xl shadow-xl max-w-lg w-full p-3xl">
+        <div className="auth-header text-center mb-2xl">
+          <h2 className="text-navy font-heading text-3xl mb-sm font-bold">
+            🎯 Join Talent Radar
+          </h2>
+          <p className="text-gray text-base m-0">Create your account</p>
         </div>
-
-        <form onSubmit={handleSubmit} className="auth-form">
-          {/* First and Last Name fields */}
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="firstName">First Name</label>
+        <form
+          onSubmit={handleSubmit}
+          className="auth-form flex flex-col gap-lg"
+        >
+          <div className="form-row grid grid-cols-2 gap-md">
+            <div className="form-group flex flex-col">
+              <label
+                htmlFor="firstName"
+                className="text-navy font-semibold mb-sm text-sm"
+              >
+                First Name
+              </label>
               <input
                 type="text"
                 id="firstName"
                 name="firstName"
                 value={formData.firstName}
                 onChange={handleChange}
-                className={errors.firstName ? "error" : ""}
+                className={`p-md border-2 border-gray-200 rounded-lg text-base font-primary bg-white text-navy ${
+                  errors.firstName ? "border-error bg-error" : ""
+                }`}
                 placeholder="Your first name"
                 disabled={isLoading}
               />
               {errors.firstName && (
-                <span className="error-message">{errors.firstName}</span>
+                <span className="error-message text-error text-sm mt-xs d-block">
+                  {errors.firstName}
+                </span>
               )}
             </div>
-
-            <div className="form-group">
-              <label htmlFor="lastName">Last Name</label>
+            <div className="form-group flex flex-col">
+              <label
+                htmlFor="lastName"
+                className="text-navy font-semibold mb-sm text-sm"
+              >
+                Last Name
+              </label>
               <input
                 type="text"
                 id="lastName"
                 name="lastName"
                 value={formData.lastName}
                 onChange={handleChange}
-                className={errors.lastName ? "error" : ""}
+                className={`p-md border-2 border-gray-200 rounded-lg text-base font-primary bg-white text-navy ${
+                  errors.lastName ? "border-error bg-error" : ""
+                }`}
                 placeholder="Your last name"
                 disabled={isLoading}
               />
               {errors.lastName && (
-                <span className="error-message">{errors.lastName}</span>
+                <span className="error-message text-error text-sm mt-xs d-block">
+                  {errors.lastName}
+                </span>
               )}
             </div>
           </div>
-
-          {/* Username field */}
-          <div className="form-group">
-            <label htmlFor="username">Username *</label>
+          <div className="form-group flex flex-col">
+            <label
+              htmlFor="username"
+              className="text-navy font-semibold mb-sm text-sm"
+            >
+              Username *
+            </label>
             <input
               type="text"
               id="username"
               name="username"
               value={formData.username}
               onChange={handleChange}
-              className={errors.username ? "error" : ""}
+              className={`p-md border-2 border-gray-200 rounded-lg text-base font-primary bg-white text-navy ${
+                errors.username ? "border-error bg-error" : ""
+              }`}
               placeholder="Choose a username (3-50 characters)"
               disabled={isLoading}
               required
             />
             {errors.username && (
-              <span className="error-message">{errors.username}</span>
+              <span className="error-message text-error text-sm mt-xs d-block">
+                {errors.username}
+              </span>
             )}
           </div>
-
-          {/* Email field */}
-          <div className="form-group">
-            <label htmlFor="email">Email Address *</label>
+          <div className="form-group flex flex-col">
+            <label
+              htmlFor="email"
+              className="text-navy font-semibold mb-sm text-sm"
+            >
+              Email Address *
+            </label>
             <input
               type="email"
               id="email"
               name="email"
               value={formData.email}
               onChange={handleChange}
-              className={errors.email ? "error" : ""}
+              className={`p-md border-2 border-gray-200 rounded-lg text-base font-primary bg-white text-navy ${
+                errors.email ? "border-error bg-error" : ""
+              }`}
               placeholder="your.email@example.com"
               disabled={isLoading}
               required
             />
             {errors.email && (
-              <span className="error-message">{errors.email}</span>
+              <span className="error-message text-error text-sm mt-xs d-block">
+                {errors.email}
+              </span>
             )}
           </div>
-
-          {/* Role selection */}
-          <div className="form-group">
-            <label htmlFor="role">Account Type</label>
+          <div className="form-group flex flex-col">
+            <label
+              htmlFor="role"
+              className="text-navy font-semibold mb-sm text-sm"
+            >
+              Account Type
+            </label>
             <select
               id="role"
               name="role"
               value={formData.role}
               onChange={handleChange}
+              className="p-md border-2 border-gray-200 rounded-lg text-base font-primary bg-white text-navy"
               disabled={isLoading}
             >
               <option value="USER">Fan/Enthusiast</option>
@@ -217,65 +256,80 @@ const Register = ({ onToggleMode, onSuccess }) => {
               <option value="COACH">Coach</option>
             </select>
           </div>
-
-          {/* Password and Confirm Password fields */}
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="password">Password *</label>
+          <div className="form-row grid grid-cols-2 gap-md">
+            <div className="form-group flex flex-col">
+              <label
+                htmlFor="password"
+                className="text-navy font-semibold mb-sm text-sm"
+              >
+                Password *
+              </label>
               <input
                 type="password"
                 id="password"
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                className={errors.password ? "error" : ""}
+                className={`p-md border-2 border-gray-200 rounded-lg text-base font-primary bg-white text-navy ${
+                  errors.password ? "border-error bg-error" : ""
+                }`}
                 placeholder="At least 6 characters"
                 disabled={isLoading}
                 required
               />
               {errors.password && (
-                <span className="error-message">{errors.password}</span>
+                <span className="error-message text-error text-sm mt-xs d-block">
+                  {errors.password}
+                </span>
               )}
             </div>
-
-            <div className="form-group">
-              <label htmlFor="confirmPassword">Confirm Password *</label>
+            <div className="form-group flex flex-col">
+              <label
+                htmlFor="confirmPassword"
+                className="text-navy font-semibold mb-sm text-sm"
+              >
+                Confirm Password *
+              </label>
               <input
                 type="password"
                 id="confirmPassword"
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                className={errors.confirmPassword ? "error" : ""}
+                className={`p-md border-2 border-gray-200 rounded-lg text-base font-primary bg-white text-navy ${
+                  errors.confirmPassword ? "border-error bg-error" : ""
+                }`}
                 placeholder="Confirm your password"
                 disabled={isLoading}
                 required
               />
               {errors.confirmPassword && (
-                <span className="error-message">{errors.confirmPassword}</span>
+                <span className="error-message text-error text-sm mt-xs d-block">
+                  {errors.confirmPassword}
+                </span>
               )}
             </div>
           </div>
-
-          {/* Submit error message */}
           {errors.submit && (
-            <div className="error-message submit-error">{errors.submit}</div>
+            <div className="error-message submit-error text-error bg-error border-error rounded-md p-md mb-md text-center">
+              {errors.submit}
+            </div>
           )}
-
-          {/* Submit button */}
-          <button type="submit" className="auth-button" disabled={isLoading}>
+          <button
+            type="submit"
+            className="auth-button bg-navy text-white rounded-lg font-semibold p-lg px-xl mt-md w-full transition-base"
+            disabled={isLoading}
+          >
             {isLoading ? "Creating Account..." : "Create Account"}
           </button>
         </form>
-
-        {/* Footer with toggle to login */}
-        <div className="auth-footer">
-          <p>
+        <div className="auth-footer text-center mt-xl pt-lg border-t border-gray-200">
+          <p className="text-gray m-0 text-sm">
             Already have an account?{" "}
             <button
               type="button"
               onClick={onToggleMode}
-              className="toggle-button"
+              className="toggle-button text-accent font-semibold underline cursor-pointer transition-fast"
             >
               Sign In
             </button>

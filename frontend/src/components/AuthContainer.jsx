@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import Login from "./Login";
 import Register from "./Register";
+import "../utilities.css";
 
 /**
  * AuthContainer component manages authentication UI.
@@ -19,9 +20,9 @@ const AuthContainer = ({ onAuthSuccess }) => {
   // Show loading spinner while authentication state is being checked
   if (loading) {
     return (
-      <div className="loading-container">
-        <div className="loading-spinner"></div>
-        <p>Loading...</p>
+      <div className="loading-container flex flex-col items-center justify-center bg-navy text-white min-h-full">
+        <div className="loading-spinner mb-lg"></div>
+        <p className="text-lg">Loading...</p>
       </div>
     );
   }

@@ -1,116 +1,128 @@
-.App {
-  text-align: center;
-  min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
-    sans-serif;
-}
+@import "./theme.css";
 
-body {
+* {
+  box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
+body {
+  font-family: var(--font-family-primary);
+  color: var(--color-navy-primary);
+  background-color: var(--color-off-white);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.App {
+  text-align: center;
+  min-height: 100vh;
+  background: linear-gradient(
+    135deg,
+    var(--color-navy-primary) 0%,
+    var(--color-navy-light) 100%
+  );
+  color: var(--color-white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .App-header {
   max-width: 600px;
-  padding: 40px;
+  padding: var(--spacing-3xl);
 }
 
 .App-header h1 {
-  font-size: 3rem;
-  margin-bottom: 10px;
+  font-family: var(--font-family-heading);
+  font-size: var(--font-size-4xl);
+  margin-bottom: var(--spacing-md);
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  color: var(--color-white);
 }
 
 .App-header p {
-  font-size: 1.2rem;
-  margin-bottom: 30px;
-  opacity: 0.9;
+  font-size: var(--font-size-lg);
+  margin-bottom: var(--spacing-2xl);
+  opacity: 0.95;
 }
 
-.status-card {
+/* Cards */
+.status-card,
+.quick-links,
+.user-info {
   background: rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  padding: 20px;
-  margin: 20px 0;
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-xl);
+  margin: var(--spacing-xl) 0;
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: transform var(--transition-base);
 }
 
-.status-card h3 {
+.status-card:hover,
+.quick-links:hover,
+.user-info:hover {
+  transform: translateY(-2px);
+}
+
+.status-card h3,
+.quick-links h3 {
   margin-top: 0;
-  color: #fff;
+  color: var(--color-white);
+  font-size: var(--font-size-xl);
+  margin-bottom: var(--spacing-md);
 }
 
 .status-card p {
-  margin: 10px 0;
+  margin: var(--spacing-sm) 0;
   font-family: "Courier New", monospace;
-  font-size: 0.9rem;
+  font-size: var(--font-size-sm);
 }
 
-.quick-links {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  padding: 20px;
-  margin: 20px 0;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.quick-links h3 {
-  margin-top: 0;
-  color: #fff;
-}
-
+/* Quick Links */
 .quick-links ul {
   list-style: none;
   padding: 0;
 }
 
 .quick-links li {
-  margin: 10px 0;
+  margin: var(--spacing-md) 0;
 }
 
 .quick-links a {
-  color: #fff;
+  color: var(--color-white);
   text-decoration: none;
-  padding: 8px 16px;
-  border-radius: 5px;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
   border: 1px solid rgba(255, 255, 255, 0.3);
-  transition: all 0.3s ease;
+  transition: all var(--transition-base);
   display: inline-block;
 }
 
 .quick-links a:hover {
   background: rgba(255, 255, 255, 0.2);
   transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
-.user-info {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  padding: 20px;
-  margin-bottom: 20px;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
+/* Buttons */
 .logout-button {
   background: rgba(255, 255, 255, 0.2);
-  color: white;
+  color: var(--color-white);
   border: 1px solid rgba(255, 255, 255, 0.3);
-  padding: 10px 20px;
-  border-radius: 5px;
+  padding: var(--spacing-md) var(--spacing-xl);
+  border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all 0.3s ease;
-  margin-top: 10px;
+  transition: all var(--transition-base);
+  margin-top: var(--spacing-md);
+  font-size: var(--font-size-base);
+  font-weight: 600;
 }
 
 .logout-button:hover {
   background: rgba(255, 255, 255, 0.3);
   transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
 }

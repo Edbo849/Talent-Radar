@@ -83,64 +83,95 @@ const Login = ({ onToggleMode, onSuccess }) => {
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <div className="auth-header">
-          <h2>🎯 Welcome Back</h2>
-          <p>Sign in to your Talent Radar account</p>
+    <div className="auth-container flex items-center justify-center bg-navy text-white min-h-full">
+      <div className="auth-card bg-white rounded-2xl shadow-xl max-w-lg w-full p-3xl">
+        <div className="auth-header text-center mb-2xl">
+          <h2 className="text-navy font-heading text-3xl mb-sm font-bold">
+            🎯 Welcome Back
+          </h2>
+          <p className="text-gray text-base m-0">
+            Sign in to your Talent Radar account
+          </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="auth-form">
-          <div className="form-group">
-            <label htmlFor="usernameOrEmail">Username or Email</label>
+        <form
+          onSubmit={handleSubmit}
+          className="auth-form flex flex-col gap-lg"
+        >
+          <div className="form-group flex flex-col">
+            <label
+              htmlFor="usernameOrEmail"
+              className="text-navy font-semibold mb-sm text-sm"
+            >
+              Username or Email
+            </label>
             <input
               type="text"
               id="usernameOrEmail"
               name="usernameOrEmail"
               value={formData.usernameOrEmail}
               onChange={handleChange}
-              className={errors.usernameOrEmail ? "error" : ""}
+              className={`p-md border-2 border-gray-200 rounded-lg text-base font-primary bg-white text-navy ${
+                errors.usernameOrEmail ? "border-error bg-error" : ""
+              }`}
               placeholder="Enter your username or email"
               disabled={isLoading}
             />
             {errors.usernameOrEmail && (
-              <span className="error-message">{errors.usernameOrEmail}</span>
+              <span className="error-message text-error text-sm mt-xs d-block">
+                {errors.usernameOrEmail}
+              </span>
             )}
           </div>
 
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
+          <div className="form-group flex flex-col">
+            <label
+              htmlFor="password"
+              className="text-navy font-semibold mb-sm text-sm"
+            >
+              Password
+            </label>
             <input
               type="password"
               id="password"
               name="password"
               value={formData.password}
               onChange={handleChange}
-              className={errors.password ? "error" : ""}
+              className={`p-md border-2 border-gray-200 rounded-lg text-base font-primary bg-white text-navy ${
+                errors.password ? "border-error bg-error" : ""
+              }`}
               placeholder="Enter your password"
               disabled={isLoading}
             />
             {errors.password && (
-              <span className="error-message">{errors.password}</span>
+              <span className="error-message text-error text-sm mt-xs d-block">
+                {errors.password}
+              </span>
             )}
           </div>
 
           {errors.submit && (
-            <div className="error-message submit-error">{errors.submit}</div>
+            <div className="error-message submit-error text-error bg-error border-error rounded-md p-md mb-md text-center">
+              {errors.submit}
+            </div>
           )}
 
-          <button type="submit" className="auth-button" disabled={isLoading}>
+          <button
+            type="submit"
+            className="auth-button bg-navy text-white rounded-lg font-semibold p-lg px-xl mt-md w-full transition-base"
+            disabled={isLoading}
+          >
             {isLoading ? "Signing In..." : "Sign In"}
           </button>
         </form>
 
-        <div className="auth-footer">
-          <p>
+        <div className="auth-footer text-center mt-xl pt-lg border-t border-gray-200">
+          <p className="text-gray m-0 text-sm">
             Don't have an account?{" "}
             <button
               type="button"
               onClick={onToggleMode}
-              className="toggle-button"
+              className="toggle-button text-accent font-semibold underline cursor-pointer transition-fast"
             >
               Register
             </button>
