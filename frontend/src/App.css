@@ -10,6 +10,11 @@
     sans-serif;
 }
 
+body {
+  margin: 0;
+  padding: 0;
+}
+
 .App-header {
   max-width: 600px;
   padding: 40px;
@@ -82,5 +87,30 @@
 
 .quick-links a:hover {
   background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.user-info {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 20px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.logout-button {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 10px;
+}
+
+.logout-button:hover {
+  background: rgba(255, 255, 255, 0.3);
   transform: translateY(-2px);
 }
