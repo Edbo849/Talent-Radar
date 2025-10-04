@@ -4,7 +4,7 @@
 
 :root {
   /* Primary Colors */
-  --color-navy-primary: #1f293c;
+  --color-navy-primary: #253046;
   --color-navy-light: #2d3e50;
   --color-navy-dark: #0f1820;
   --color-white: #ffffff;
@@ -88,7 +88,7 @@
 /* Dark mode variables (optional) */
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-navy-primary: #0f1820;
+    --color-navy-primary: #253046;
     --color-navy-light: #1a2332;
     --color-navy-dark: #080c12;
   }

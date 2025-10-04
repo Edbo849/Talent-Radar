@@ -111,7 +111,7 @@ const Register = ({ onToggleMode, onSuccess }) => {
       onSuccess && onSuccess();
     } catch (error) {
       setErrors({
-        submit: error.message || "Registration failed. Please try again.",
+        submit: "Registration failed. Please try again.",
       });
     } finally {
       setIsLoading(false);
@@ -121,8 +121,14 @@ const Register = ({ onToggleMode, onSuccess }) => {
   // Render registration form
   return (
     <div className="auth-container flex items-center justify-center bg-navy text-white min-h-full">
-      <div className="auth-card bg-white rounded-2xl shadow-xl max-w-lg w-full p-3xl">
-        <div className="auth-header text-center mb-2xl">
+      <div className="auth-card bg-white rounded-2xl shadow-xl max-w-lg w-full p-3xl text-center">
+        <img
+          src="/talent_radar.png"
+          alt="Talent Radar Logo"
+          className="mb-md mx-auto d-block"
+          style={{ width: 120, height: 120, borderRadius: "10%" }}
+        />
+        <div className="auth-header text-center mb-xl">
           <h2 className="text-navy font-heading text-3xl mb-sm font-bold">
             🎯 Join Talent Radar
           </h2>
@@ -146,9 +152,7 @@ const Register = ({ onToggleMode, onSuccess }) => {
                 name="firstName"
                 value={formData.firstName}
                 onChange={handleChange}
-                className={`p-md border-2 border-gray-200 rounded-lg text-base font-primary bg-white text-navy ${
-                  errors.firstName ? "border-error bg-error" : ""
-                }`}
+                className={`p-md border-2 border-gray-200 rounded-lg text-base font-primary bg-white text-navy`}
                 placeholder="Your first name"
                 disabled={isLoading}
               />
@@ -171,9 +175,7 @@ const Register = ({ onToggleMode, onSuccess }) => {
                 name="lastName"
                 value={formData.lastName}
                 onChange={handleChange}
-                className={`p-md border-2 border-gray-200 rounded-lg text-base font-primary bg-white text-navy ${
-                  errors.lastName ? "border-error bg-error" : ""
-                }`}
+                className={`p-md border-2 border-gray-200 rounded-lg text-base font-primary bg-white text-navy`}
                 placeholder="Your last name"
                 disabled={isLoading}
               />
@@ -197,9 +199,7 @@ const Register = ({ onToggleMode, onSuccess }) => {
               name="username"
               value={formData.username}
               onChange={handleChange}
-              className={`p-md border-2 border-gray-200 rounded-lg text-base font-primary bg-white text-navy ${
-                errors.username ? "border-error bg-error" : ""
-              }`}
+              className={`p-md border-2 border-gray-200 rounded-lg text-base font-primary bg-white text-navy`}
               placeholder="Choose a username (3-50 characters)"
               disabled={isLoading}
               required
@@ -223,9 +223,7 @@ const Register = ({ onToggleMode, onSuccess }) => {
               name="email"
               value={formData.email}
               onChange={handleChange}
-              className={`p-md border-2 border-gray-200 rounded-lg text-base font-primary bg-white text-navy ${
-                errors.email ? "border-error bg-error" : ""
-              }`}
+              className={`p-md border-2 border-gray-200 rounded-lg text-base font-primary bg-white text-navy`}
               placeholder="your.email@example.com"
               disabled={isLoading}
               required
@@ -270,9 +268,7 @@ const Register = ({ onToggleMode, onSuccess }) => {
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                className={`p-md border-2 border-gray-200 rounded-lg text-base font-primary bg-white text-navy ${
-                  errors.password ? "border-error bg-error" : ""
-                }`}
+                className={`p-md border-2 border-gray-200 rounded-lg text-base font-primary bg-white text-navy`}
                 placeholder="At least 6 characters"
                 disabled={isLoading}
                 required
@@ -296,9 +292,7 @@ const Register = ({ onToggleMode, onSuccess }) => {
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                className={`p-md border-2 border-gray-200 rounded-lg text-base font-primary bg-white text-navy ${
-                  errors.confirmPassword ? "border-error bg-error" : ""
-                }`}
+                className={`p-md border-2 border-gray-200 rounded-lg text-base font-primary bg-white text-navy`}
                 placeholder="Confirm your password"
                 disabled={isLoading}
                 required
@@ -311,7 +305,13 @@ const Register = ({ onToggleMode, onSuccess }) => {
             </div>
           </div>
           {errors.submit && (
-            <div className="error-message submit-error text-error bg-error border-error rounded-md p-md mb-md text-center">
+            <div
+              className="error-message submit-error text-error border-error rounded-md p-md mb-md text-center"
+              style={{
+                backgroundColor: "rgba(218, 51, 51, 0.41)",
+                border: "1px solid #da2929ff",
+              }}
+            >
               {errors.submit}
             </div>
           )}
@@ -325,7 +325,7 @@ const Register = ({ onToggleMode, onSuccess }) => {
         </form>
         <div className="auth-footer text-center mt-xl pt-lg border-t border-gray-200">
           <p className="text-gray m-0 text-sm">
-            Already have an account?{" "}
+            Already have an account?
             <button
               type="button"
               onClick={onToggleMode}

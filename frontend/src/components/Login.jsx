@@ -75,7 +75,7 @@ const Login = ({ onToggleMode, onSuccess }) => {
       if (onSuccess) onSuccess();
     } catch (error) {
       setErrors({
-        submit: error.message || "Login failed. Please check your credentials.",
+        submit: "Login failed. Please check your credentials.",
       });
     } finally {
       setIsLoading(false);
@@ -84,8 +84,14 @@ const Login = ({ onToggleMode, onSuccess }) => {
 
   return (
     <div className="auth-container flex items-center justify-center bg-navy text-white min-h-full">
-      <div className="auth-card bg-white rounded-2xl shadow-xl max-w-lg w-full p-3xl">
-        <div className="auth-header text-center mb-2xl">
+      <div className="auth-card bg-white rounded-2xl shadow-xl max-w-lg w-full p-3xl text-center">
+        <img
+          src="/talent_radar.png"
+          alt="Talent Radar Logo"
+          className="mb-md mx-auto d-block"
+          style={{ width: 120, height: 120, borderRadius: "10%" }}
+        />
+        <div className="auth-header text-center mb-xl">
           <h2 className="text-navy font-heading text-3xl mb-sm font-bold">
             🎯 Welcome Back
           </h2>
@@ -111,8 +117,8 @@ const Login = ({ onToggleMode, onSuccess }) => {
               name="usernameOrEmail"
               value={formData.usernameOrEmail}
               onChange={handleChange}
-              className={`p-md border-2 border-gray-200 rounded-lg text-base font-primary bg-white text-navy ${
-                errors.usernameOrEmail ? "border-error bg-error" : ""
+              className={`p-md border-2 border-gray-200 rounded-lg text-base font-primary bg-white text-navy${
+                errors.usernameOrEmail ? " error" : ""
               }`}
               placeholder="Enter your username or email"
               disabled={isLoading}
@@ -137,8 +143,8 @@ const Login = ({ onToggleMode, onSuccess }) => {
               name="password"
               value={formData.password}
               onChange={handleChange}
-              className={`p-md border-2 border-gray-200 rounded-lg text-base font-primary bg-white text-navy ${
-                errors.password ? "border-error bg-error" : ""
+              className={`p-md border-2 border-gray-200 rounded-lg text-base font-primary bg-white text-navy${
+                errors.usernameOrEmail ? " error" : ""
               }`}
               placeholder="Enter your password"
               disabled={isLoading}
@@ -151,7 +157,13 @@ const Login = ({ onToggleMode, onSuccess }) => {
           </div>
 
           {errors.submit && (
-            <div className="error-message submit-error text-error bg-error border-error rounded-md p-md mb-md text-center">
+            <div
+              className="error-message submit-error text-error border-error rounded-md p-md mb-md text-center"
+              style={{
+                backgroundColor: "rgba(218, 51, 51, 0.41)",
+                border: "1px solid #da2929ff",
+              }}
+            >
               {errors.submit}
             </div>
           )}
