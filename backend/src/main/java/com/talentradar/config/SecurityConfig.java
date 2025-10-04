@@ -53,6 +53,7 @@ public class SecurityConfig {
                 .requestMatchers("/error").permitAll()
                 // Allow public access to health check endpoints
                 .requestMatchers("/actuator/health").permitAll()
+                .requestMatchers("/health").permitAll()
                 // For development: Allow all API endpoints (remove in production)
                 .requestMatchers("/api/**").permitAll()
                 // All other requests require authentication

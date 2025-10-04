@@ -10,8 +10,10 @@ function AppContent() {
 
   useEffect(() => {
     // Test backend connection
-    fetch("http://localhost:8080/api")
+    fetch("http://localhost:8080/health")
       .then((response) => {
+        console.error(response);
+
         if (response.ok) {
           setBackendStatus("✅ Connected");
         } else {
