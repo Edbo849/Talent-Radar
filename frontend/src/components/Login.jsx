@@ -122,6 +122,7 @@ const Login = ({ onToggleMode, onSuccess }) => {
               }`}
               placeholder="Enter your username or email"
               disabled={isLoading}
+              autoComplete="username"
             />
             {errors.usernameOrEmail && (
               <span className="error-message text-error text-sm mt-xs d-block">
@@ -148,6 +149,7 @@ const Login = ({ onToggleMode, onSuccess }) => {
               }`}
               placeholder="Enter your password"
               disabled={isLoading}
+              autoComplete="current-password"
             />
             {errors.password && (
               <span className="error-message text-error text-sm mt-xs d-block">

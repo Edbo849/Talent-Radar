@@ -203,6 +203,7 @@ const Register = ({ onToggleMode, onSuccess }) => {
               placeholder="Choose a username (3-50 characters)"
               disabled={isLoading}
               required
+              autoComplete="username"
             />
             {errors.username && (
               <span className="error-message text-error text-sm mt-xs d-block">
@@ -272,6 +273,7 @@ const Register = ({ onToggleMode, onSuccess }) => {
                 placeholder="At least 6 characters"
                 disabled={isLoading}
                 required
+                autoComplete="new-password"
               />
               {errors.password && (
                 <span className="error-message text-error text-sm mt-xs d-block">
@@ -296,6 +298,7 @@ const Register = ({ onToggleMode, onSuccess }) => {
                 placeholder="Confirm your password"
                 disabled={isLoading}
                 required
+                autoComplete="new-password"
               />
               {errors.confirmPassword && (
                 <span className="error-message text-error text-sm mt-xs d-block">
