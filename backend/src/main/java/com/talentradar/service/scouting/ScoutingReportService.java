@@ -545,4 +545,97 @@ public class ScoutingReportService {
             return 0.0;
         }
     }
+
+    /**
+     * Gets recent public reports with pagination.
+     */
+    @Transactional(readOnly = true)
+    public Page<ScoutingReport> getRecentPublicReports(Pageable pageable) {
+        try {
+            if (pageable == null) {
+                throw new IllegalArgumentException("Pageable cannot be null");
+            }
+
+            return reportRepository.findByIsPublicTrueOrderByCreatedAtDesc(pageable);
+
+        } catch (IllegalArgumentException e) {
+            logger.error("Error getting recent public reports: {}", e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            logger.error("Error retrieving recent public reports: {}", e.getMessage());
+            throw new RuntimeException("Failed to get recent public reports", e);
+        }
+    }
+
+    /**
+     * Counts total reports by scout.
+     */
+    @Transactional(readOnly = true)
+    public Long countByScout(User scout) {
+        try {
+            if (scout == null) {
+                throw new UserNotFoundException("Scout cannot be null");
+            }
+
+            return reportRepository.countByScout(scout);
+
+        } catch (UserNotFoundException e) {
+            logger.error("Error counting reports by scout: {}", e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            logger.error("Error counting reports for scout {}: {}",
+                    scout != null ? scout.getUsername() : "null", e.getMessage());
+            return 0L;
+        }
+    }
+
+    /**
+     * Counts reports by scout and status.
+     */
+    @Transactional(readOnly = true)
+    public Long countByScoutAndStatus(User scout, ReportStatus status) {
+        try {
+            if (scout == null) {
+                throw new UserNotFoundException("Scout cannot be null");
+            }
+            if (status == null) {
+                throw new IllegalArgumentException("Status cannot be null");
+            }
+
+            return reportRepository.countByScoutAndStatus(scout, status);
+
+        } catch (UserNotFoundException | IllegalArgumentException e) {
+            logger.error("Error counting reports by scout and status: {}", e.getMessage());
+            throw e;
+        } catch (RuntimeException e) {
+            logger.error("Error counting reports for scout {} with status {}: {}",
+                    scout != null ? scout.getUsername() : "null", status, e.getMessage());
+            return 0L;
+        }
+    }
+
+    /**
+     * Gets reports by scout with pagination.
+     */
+    @Transactional(readOnly = true)
+    public Page<ScoutingReport> getReportsByScout(User scout, Pageable pageable) {
+        try {
+            if (scout == null) {
+                throw new UserNotFoundException("Scout cannot be null");
+            }
+            if (pageable == null) {
+                throw new IllegalArgumentException("Pageable cannot be null");
+            }
+
+            return reportRepository.findByScoutOrderByCreatedAtDesc(scout, pageable);
+
+        } catch (UserNotFoundException | IllegalArgumentException e) {
+            logger.error("Error getting reports by scout: {}", e.getMessage());
+            throw e;
+        } catch (RuntimeException e) {
+            logger.error("Error retrieving reports for scout {}: {}",
+                    scout != null ? scout.getUsername() : "null", e.getMessage());
+            throw new RuntimeException("Failed to get reports by scout", e);
+        }
+    }
 }

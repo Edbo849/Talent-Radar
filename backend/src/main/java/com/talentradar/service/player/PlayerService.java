@@ -1,9 +1,11 @@
 package com.talentradar.service.player;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +26,7 @@ import com.talentradar.model.player.PlayerStatistic;
 import com.talentradar.model.player.PlayerTransfer;
 import com.talentradar.model.player.PlayerView;
 import com.talentradar.model.user.User;
+import com.talentradar.repository.player.PlayerRatingRepository;
 import com.talentradar.repository.player.PlayerRepository;
 import com.talentradar.repository.player.PlayerStatisticRepository;
 import com.talentradar.repository.player.PlayerViewRepository;
@@ -46,6 +49,9 @@ public class PlayerService {
 
     @Autowired
     private PlayerViewRepository playerViewRepository;
+
+    @Autowired
+    private PlayerRatingRepository playerRatingRepository;
 
     /**
      * Retrieves the current status of scheduled tasks.
@@ -289,13 +295,117 @@ public class PlayerService {
             if (pageable == null) {
                 throw new IllegalArgumentException("Pageable cannot be null");
             }
-            return playerRepository.findByTrendingScoreGreaterThanOrderByTrendingScoreDesc(0.0, pageable);
+            return playerRepository.findByTrendingScoreGreaterThanOrderByTrendingScoreDesc(-1.0, pageable);
         } catch (IllegalArgumentException e) {
             logger.error("Invalid pageable parameter for trending players: {}", e.getMessage());
             throw e;
         } catch (Exception e) {
             logger.error("Error finding trending players: {}", e.getMessage());
             throw new RuntimeException("Failed to find trending players", e);
+        }
+    }
+
+    /**
+     * Get top rated players
+     */
+    @Transactional(readOnly = true)
+    public List<Player> getTopRatedPlayers(int limit) {
+        try {
+            // Get players with highest average ratings from PlayerRating
+            Pageable pageable = PageRequest.of(0, limit);
+            List<Object[]> topRatedResults = playerRatingRepository.findTopRatedPlayersOverall(pageable);
+
+            return topRatedResults.stream()
+                    .map(result -> (Player) result[0])
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            logger.error("Error getting top rated players: {}", e.getMessage());
+            throw new RuntimeException("Failed to get top rated players", e);
+        }
+    }
+
+    /**
+     * Get recently added players
+     */
+    @Transactional(readOnly = true)
+    public List<Player> getRecentlyAddedPlayers(int limit) {
+        try {
+            LocalDateTime weekAgo = LocalDateTime.now().minusDays(7);
+            Pageable pageable = PageRequest.of(0, limit);
+            List<Player> players = playerRepository.findByCreatedAtAfterOrderByCreatedAtDesc(weekAgo, pageable);
+            return players;
+        } catch (Exception e) {
+            logger.error("Error getting recently added players: {}", e.getMessage());
+            throw new RuntimeException("Failed to get recently added players", e);
+        }
+    }
+
+    /**
+     * Get top players by statistics
+     */
+    @Transactional(readOnly = true)
+    public List<Player> getTopPlayersByStatistic(String statistic, Integer season, int limit) {
+        try {
+            Pageable pageable = PageRequest.of(0, limit);
+
+            return switch (statistic.toLowerCase()) {
+                case "goals" ->
+                    playerStatisticRepository.findTopGoalScorersBySeason(season, pageable)
+                    .getContent().stream()
+                    .map(PlayerStatistic::getPlayer)
+                    .collect(Collectors.toList());
+                case "assists" ->
+                    playerStatisticRepository.findTopAssistProvidersBySeason(season, pageable)
+                    .getContent().stream()
+                    .map(PlayerStatistic::getPlayer)
+                    .collect(Collectors.toList());
+                case "appearances" ->
+                    playerStatisticRepository.findMostActivePlayersBySeason(season, pageable)
+                    .getContent().stream()
+                    .map(PlayerStatistic::getPlayer)
+                    .collect(Collectors.toList());
+                default ->
+                    throw new IllegalArgumentException("Invalid statistic: " + statistic);
+            };
+        } catch (RuntimeException e) {
+            logger.error("Error getting top players by statistic {}: {}", statistic, e.getMessage());
+            throw new RuntimeException("Failed to get top players by statistic", e);
+        }
+    }
+
+    /**
+     * Get top rated players for current season based on statistics
+     */
+    @Transactional(readOnly = true)
+    public List<Player> getTopRatedPlayersSeason(int limit) {
+        try {
+            Pageable pageable = PageRequest.of(0, limit);
+            Page<PlayerStatistic> topRatedStats = playerStatisticRepository.findTopRatedPlayersSeason(1000, pageable);
+            logger.info("Top rated stats: {}", topRatedStats);
+
+            logger.debug("Found {} top rated player statistics for current season", topRatedStats.getContent().size());
+
+            List<Player> players = topRatedStats.getContent().stream()
+                    .map(PlayerStatistic::getPlayer)
+                    .collect(Collectors.toList());
+
+            logger.debug("Converted to {} players", players.size());
+            return players;
+        } catch (Exception e) {
+            logger.error("Error getting top rated players for current season: {}", e.getMessage());
+            // Fallback to any players with statistics
+            try {
+                Pageable pageable = PageRequest.of(0, limit);
+                List<PlayerStatistic> anyStats = playerStatisticRepository.findAll(pageable).getContent();
+                return anyStats.stream()
+                        .map(PlayerStatistic::getPlayer)
+                        .distinct()
+                        .limit(limit)
+                        .collect(Collectors.toList());
+            } catch (Exception ex) {
+                logger.error("Fallback also failed: {}", ex.getMessage());
+                return List.of();
+            }
         }
     }
 
@@ -457,8 +567,32 @@ public class PlayerService {
         }
     }
 
+    /*
+    * Calculates view growth from the last week
+     */
+    public Double calculateWeeklyGrowthPercentage(Player player) {
+        try {
+            LocalDateTime oneWeekAgo = LocalDateTime.now().minusDays(7);
+            LocalDateTime twoWeeksAgo = LocalDateTime.now().minusDays(14);
+
+            Long thisWeekViews = playerViewRepository.countByPlayerAndCreatedAtBetween(
+                    player, oneWeekAgo, LocalDateTime.now());
+            Long lastWeekViews = playerViewRepository.countByPlayerAndCreatedAtBetween(
+                    player, twoWeeksAgo, oneWeekAgo);
+
+            if (lastWeekViews == 0) {
+                return thisWeekViews > 0 ? 100.0 : 0.0; // 100% if new views, 0% if no change
+            }
+
+            return ((double) (thisWeekViews - lastWeekViews) / lastWeekViews) * 100;
+        } catch (Exception e) {
+            logger.error("Error calculating weekly growth for player {}: {}", player.getName(), e.getMessage());
+            return 0.0;
+        }
+    }
+
     /**
-     * Retrieves the current status of scheduled tasks.
+     * Converts a Player entity to a PlayerDTO.
      */
     public PlayerDTO convertToDTO(Player player) {
         try {
@@ -485,26 +619,67 @@ public class PlayerService {
             dto.setPhotoUrl(player.getPhotoUrl());
             dto.setIsInjured(player.getIsInjured());
             dto.setIsActive(player.getIsActive());
-            dto.setIsEligibleForU21(player.isEligibleForU21());
+            dto.setJerseyNumber(player.getJerseyNumber());
 
             // Trending information
             dto.setTrendingScore(player.getTrendingScore());
             dto.setTotalViews(player.getTotalViews());
             dto.setWeeklyViews(player.getWeeklyViews());
             dto.setMonthlyViews(player.getMonthlyViews());
+            dto.setWeeklyGrowthPercentage(calculateWeeklyGrowthPercentage(player));
 
-            // Latest statistics (current season)
-            List<PlayerStatistic> latestStats = playerStatisticRepository
-                    .findByPlayerAndSeason(player, 2024);
-            if (!latestStats.isEmpty()) {
-                PlayerStatistic stats = latestStats.get(0);
-                dto.setAppearances(stats.getAppearances());
-                dto.setGoals(stats.getGoals());
-                dto.setAssists(stats.getAssists());
-                dto.setMinutesPlayed(stats.getMinutesPlayed());
-                if (stats.getRating() != null) {
-                    dto.setRating(stats.getRating().doubleValue());
+            // Current club information
+            if (player.getCurrentClub() != null) {
+                dto.setCurrentClubId(player.getCurrentClub().getId());
+                dto.setCurrentClubName(player.getCurrentClub().getName());
+                dto.setCurrentClubLogoUrl(player.getCurrentClub().getLogoUrl());
+                if (player.getCurrentClub().getCountry() != null) {
+                    dto.setCurrentClubCountry(player.getCurrentClub().getCountry().getName());
                 }
+            }
+
+            // Get ALL 2025 statistics and combine them
+            List<PlayerStatistic> season2025Stats = null;
+            try {
+                // Get all 2025 statistics for this player
+                season2025Stats = playerStatisticRepository.findByPlayerAndSeason(player, 2025);
+
+                if (season2025Stats == null || season2025Stats.isEmpty()) {
+                    // Fallback to most recent season if no 2025 data
+                    List<PlayerStatistic> allStats = playerStatisticRepository.findByPlayerOrderBySeasonDescCreatedAtDesc(player);
+                    if (!allStats.isEmpty()) {
+                        // Get all stats from the most recent season
+                        Integer mostRecentSeason = allStats.get(0).getSeason();
+                        season2025Stats = playerStatisticRepository.findByPlayerAndSeason(player, mostRecentSeason);
+                    }
+                }
+            } catch (Exception e) {
+                logger.debug("Error fetching player statistics: {}", e.getMessage());
+            }
+
+            // Combine statistics and collect club information
+            if (season2025Stats != null && !season2025Stats.isEmpty()) {
+                // Combine all statistics from 2025
+                CombinedSeasonStats combinedStats = combineSeasonStatistics(season2025Stats);
+
+                // Set combined statistics
+                dto.setAppearances(combinedStats.getTotalAppearances());
+                dto.setGoals(combinedStats.getTotalGoals());
+                dto.setAssists(combinedStats.getTotalAssists());
+                dto.setMinutesPlayed(combinedStats.getTotalMinutesPlayed());
+                dto.setRating(combinedStats.getAverageRating());
+
+                // Set clubs played for this season
+                dto.setSeasonClubs(combinedStats.getClubNames());
+            } else {
+                logger.debug("No statistics found for player: {}", player.getName());
+                // Set default values
+                dto.setAppearances(0);
+                dto.setGoals(0);
+                dto.setAssists(0);
+                dto.setMinutesPlayed(0);
+                dto.setRating(0.0);
+                dto.setSeasonClubs(List.of());
             }
 
             dto.setCreatedAt(player.getCreatedAt());
@@ -518,6 +693,88 @@ public class PlayerService {
         } catch (Exception e) {
             logger.error("Error converting player to DTO: {}", e.getMessage());
             throw new RuntimeException("Failed to convert player to DTO", e);
+        }
+    }
+
+    private CombinedSeasonStats combineSeasonStatistics(List<PlayerStatistic> seasonStats) {
+        int totalAppearances = 0;
+        int totalGoals = 0;
+        int totalAssists = 0;
+        int totalMinutesPlayed = 0;
+        double totalRatingPoints = 0.0;
+        int ratingsCount = 0;
+        List<String> clubNames = new ArrayList<>();
+
+        for (PlayerStatistic stat : seasonStats) {
+            // Sum up the statistics
+            totalAppearances += (stat.getAppearances() != null ? stat.getAppearances() : 0);
+            totalGoals += (stat.getGoals() != null ? stat.getGoals() : 0);
+            totalAssists += (stat.getAssists() != null ? stat.getAssists() : 0);
+            totalMinutesPlayed += (stat.getMinutesPlayed() != null ? stat.getMinutesPlayed() : 0);
+
+            // Calculate weighted average rating (weighted by appearances)
+            if (stat.getRating() != null && stat.getAppearances() != null && stat.getAppearances() > 0) {
+                totalRatingPoints += stat.getRating().doubleValue() * stat.getAppearances();
+                ratingsCount += stat.getAppearances();
+            }
+
+            // Collect club names
+            if (stat.getClub() != null && stat.getClub().getName() != null) {
+                String clubName = stat.getClub().getName();
+                if (!clubNames.contains(clubName)) {
+                    clubNames.add(clubName);
+                }
+            }
+        }
+
+        // Calculate average rating
+        double averageRating = ratingsCount > 0 ? totalRatingPoints / ratingsCount : 0.0;
+
+        return new CombinedSeasonStats(totalAppearances, totalGoals, totalAssists,
+                totalMinutesPlayed, averageRating, clubNames);
+    }
+
+    private static class CombinedSeasonStats {
+
+        private final int totalAppearances;
+        private final int totalGoals;
+        private final int totalAssists;
+        private final int totalMinutesPlayed;
+        private final double averageRating;
+        private final List<String> clubNames;
+
+        public CombinedSeasonStats(int totalAppearances, int totalGoals, int totalAssists,
+                int totalMinutesPlayed, double averageRating, List<String> clubNames) {
+            this.totalAppearances = totalAppearances;
+            this.totalGoals = totalGoals;
+            this.totalAssists = totalAssists;
+            this.totalMinutesPlayed = totalMinutesPlayed;
+            this.averageRating = averageRating;
+            this.clubNames = clubNames;
+        }
+
+        public int getTotalAppearances() {
+            return totalAppearances;
+        }
+
+        public int getTotalGoals() {
+            return totalGoals;
+        }
+
+        public int getTotalAssists() {
+            return totalAssists;
+        }
+
+        public int getTotalMinutesPlayed() {
+            return totalMinutesPlayed;
+        }
+
+        public double getAverageRating() {
+            return averageRating;
+        }
+
+        public List<String> getClubNames() {
+            return clubNames;
         }
     }
 

@@ -162,6 +162,24 @@ public class DiscussionThreadService {
     }
 
     /**
+     * Retrieves most active threads with pagination.
+     */
+    @Transactional(readOnly = true)
+    public Page<DiscussionThread> getMostActiveThreads(Pageable pageable) {
+        if (pageable == null) {
+            throw new IllegalArgumentException("Pageable cannot be null");
+        }
+
+        try {
+            LocalDateTime oneWeekAgo = LocalDateTime.now().minusDays(7);
+            return threadRepository.findMostActiveThreadsSince(oneWeekAgo, pageable);
+        } catch (Exception e) {
+            logger.error("Error retrieving most active threads: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to retrieve most active threads: " + e.getMessage(), e);
+        }
+    }
+
+    /**
      * Retrieves threads by thread type with pagination.
      */
     @Transactional(readOnly = true)

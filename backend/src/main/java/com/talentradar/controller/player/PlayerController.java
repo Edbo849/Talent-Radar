@@ -136,20 +136,108 @@ public class PlayerController {
             HttpServletRequest request) {
 
         try {
-            logger.debug("Retrieving {} trending players", limit);
-
             Pageable pageable = PageRequest.of(0, limit);
             Page<Player> players = playerService.findTrendingPlayers(pageable);
             List<PlayerDTO> playerDTOs = players.getContent().stream()
                     .map(this::convertToDTO)
                     .toList();
 
-            logger.info("Retrieved {} trending players", playerDTOs.size());
             return ResponseEntity.ok(playerDTOs);
         } catch (Exception e) {
             logger.error("Error retrieving trending players", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+    }
+
+    /**
+     * Get top rated players
+     */
+    @GetMapping("/top-rated")
+    public ResponseEntity<List<PlayerDTO>> getTopRatedPlayers(
+            @RequestParam(defaultValue = "5") int limit,
+            HttpServletRequest request) {
+        try {
+            List<Player> players = playerService.getTopRatedPlayers(limit);
+            List<PlayerDTO> playerDTOs = players.stream()
+                    .map(this::convertToDTO)
+                    .toList();
+
+            logger.info("Retrieved {} top rated players", playerDTOs.size());
+            return ResponseEntity.ok(playerDTOs);
+        } catch (Exception e) {
+            logger.error("Error retrieving top rated players", e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    /**
+     * Get recently added players
+     */
+    @GetMapping("/recent")
+    public ResponseEntity<List<PlayerDTO>> getRecentPlayers(
+            @RequestParam(defaultValue = "5") int limit,
+            HttpServletRequest request) {
+        try {
+            List<Player> players = playerService.getRecentlyAddedPlayers(limit);
+            List<PlayerDTO> playerDTOs = players.stream()
+                    .map(this::convertToDTO)
+                    .toList();
+
+            logger.info("Retrieved {} recently added players", playerDTOs.size());
+            return ResponseEntity.ok(playerDTOs);
+        } catch (Exception e) {
+            logger.error("Error retrieving recent players", e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    /**
+     * Get top players by statistics
+     */
+    @GetMapping("/top-by-stats")
+    public ResponseEntity<List<PlayerDTO>> getTopPlayersByStats(
+            @RequestParam String statistic,
+            @RequestParam(defaultValue = "2024") Integer season,
+            @RequestParam(defaultValue = "5") int limit,
+            HttpServletRequest request) {
+        try {
+            List<Player> players = playerService.getTopPlayersByStatistic(statistic, season, limit);
+            List<PlayerDTO> playerDTOs = players.stream()
+                    .map(this::convertToDTO)
+                    .toList();
+
+            logger.info("Retrieved {} top players by {}", playerDTOs.size(), statistic);
+            return ResponseEntity.ok(playerDTOs);
+        } catch (Exception e) {
+            logger.error("Error retrieving top players by stats", e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    /**
+     * Get top rated players for 2025 season
+     */
+    @GetMapping("/top-rated-season")
+    public ResponseEntity<List<PlayerDTO>> getTopRatedPlayersSeason(
+            @RequestParam(defaultValue = "25") int limit,
+            HttpServletRequest request) {
+        try {
+            List<Player> players = playerService.getTopRatedPlayersSeason(limit);
+            List<PlayerDTO> playerDTOs = players.stream()
+                    .map(player -> playerService.convertToDTO(player))
+                    .toList();
+
+            logger.info("Retrieved {} top rated players for 2025", playerDTOs.size());
+
+            if (!playerDTOs.isEmpty()) {
+                PlayerDTO firstPlayer = playerDTOs.get(0);
+                return ResponseEntity.ok(playerDTOs);
+            }
+        } catch (Exception e) {
+            logger.error("Error retrieving top rated players for 2025", e);
+            return ResponseEntity.internalServerError().build();
+        }
+        return ResponseEntity.ok().build(); // Default return in case no players are found
     }
 
     /**

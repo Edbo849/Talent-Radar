@@ -60,6 +60,18 @@ public interface PlayerStatisticRepository extends JpaRepository<PlayerStatistic
     @Query("SELECT ps FROM PlayerStatistic ps WHERE ps.league = :league AND ps.season = :season ORDER BY ps.goals DESC")
     List<PlayerStatistic> findByLeagueAndSeasonOrderByGoalsDesc(@Param("league") League league, @Param("season") Integer season);
 
+    // Find top rated players in 2025 with minimum minutes played
+    @Query("SELECT ps FROM PlayerStatistic ps "
+            + "WHERE ps.season = 2025 "
+            + "AND ps.rating IS NOT NULL "
+            + "AND ps.minutesPlayed >= :minMinutes "
+            + "ORDER BY ps.rating DESC")
+    Page<PlayerStatistic> findTopRatedPlayersSeason(@Param("minMinutes") Integer minMinutes, Pageable pageable);
+
+    // Find all statistics for a specific player ordered by season and creation date
+    @Query("SELECT ps FROM PlayerStatistic ps WHERE ps.player = :player ORDER BY ps.season DESC, ps.createdAt DESC")
+    List<PlayerStatistic> findByPlayerOrderBySeasonDescCreatedAtDesc(@Param("player") Player player);
+
     /* Position-based finder methods */
     // Find players by position
     List<PlayerStatistic> findByPositionOrderBySeasonDesc(String position);

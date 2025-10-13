@@ -1,6 +1,8 @@
 package com.talentradar.controller.scouting;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +26,7 @@ import com.talentradar.dto.scouting.ScoutingReportCreateDTO;
 import com.talentradar.dto.scouting.ScoutingReportDTO;
 import com.talentradar.exception.ScoutingReportNotFoundException;
 import com.talentradar.exception.UserNotFoundException;
+import com.talentradar.model.enums.ReportStatus;
 import com.talentradar.model.scouting.ScoutingReport;
 import com.talentradar.model.user.User;
 import com.talentradar.service.scouting.ScoutingReportService;
@@ -414,6 +417,62 @@ public class ScoutingReportController {
         } catch (Exception e) {
             logger.error("Error retrieving top-rated reports: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to retrieve top-rated reports", e);
+        }
+    }
+
+    /**
+     * Get latest public reports
+     */
+    @GetMapping("/public/latest")
+    public ResponseEntity<List<ScoutingReportDTO>> getLatestPublicReports(
+            @RequestParam(defaultValue = "5") int limit) {
+        try {
+            Pageable pageable = PageRequest.of(0, limit);
+            Page<ScoutingReport> reports = scoutingReportService.getRecentPublicReports(pageable);
+            List<ScoutingReportDTO> reportDTOs = reports.getContent().stream()
+                    .map(this::convertToDTO)
+                    .toList();
+
+            logger.info("Retrieved {} latest public reports", reportDTOs.size());
+            return ResponseEntity.ok(reportDTOs);
+        } catch (Exception e) {
+            logger.error("Error retrieving latest public reports", e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    /**
+     * Get user's report statistics
+     */
+    @GetMapping("/my-stats")
+    public ResponseEntity<Map<String, Object>> getMyReportStats(
+            HttpServletRequest request) {
+        try {
+            User user = userService.getCurrentUser(request);
+
+            Map<String, Object> stats = new HashMap<>();
+
+            // Get report counts
+            Long totalReports = scoutingReportService.countByScout(user);
+            Long draftReports = scoutingReportService.countByScoutAndStatus(user, ReportStatus.DRAFT);
+            Long publishedReports = scoutingReportService.countByScoutAndStatus(user, ReportStatus.PUBLISHED);
+
+            stats.put("totalReports", totalReports);
+            stats.put("draftReports", draftReports);
+            stats.put("publishedReports", publishedReports);
+
+            // Get recent reports
+            Pageable pageable = PageRequest.of(0, 5);
+            Page<ScoutingReport> recentReports = scoutingReportService.getReportsByScout(user, pageable);
+            stats.put("recentReports", recentReports.getContent().stream()
+                    .map(this::convertToDTO)
+                    .toList());
+
+            logger.info("Retrieved report stats for scout: {}", user.getUsername());
+            return ResponseEntity.ok(stats);
+        } catch (Exception e) {
+            logger.error("Error retrieving scout report stats", e);
+            return ResponseEntity.internalServerError().build();
         }
     }
 

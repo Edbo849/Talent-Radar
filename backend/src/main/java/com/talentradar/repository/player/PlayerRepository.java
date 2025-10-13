@@ -85,6 +85,11 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
     @Query("SELECT p FROM Player p WHERE (YEAR(CURRENT_DATE) - YEAR(p.dateOfBirth)) BETWEEN :minAge AND :maxAge AND p.isActive = true")
     List<Player> findByAgeRange(@Param("minAge") int minAge, @Param("maxAge") int maxAge);
 
+    // Find players created after a certain date with
+    @Query("SELECT p FROM Player p WHERE p.createdAt >= :since ORDER BY p.createdAt DESC")
+    List<Player> findByCreatedAtAfterOrderByCreatedAtDesc(@Param("since") LocalDateTime since, Pageable pageable);
+
+
     /* Club-based finder methods */
     // Find current players by club (those with active statistics)
     @Query("SELECT DISTINCT ps.player FROM PlayerStatistic ps WHERE ps.club = :club AND ps.player.isActive = true ORDER BY ps.player.name")

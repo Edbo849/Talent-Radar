@@ -196,6 +196,27 @@ public class DiscussionThreadController {
     }
 
     /**
+     * Get most active discussions
+     */
+    @GetMapping("/most-active")
+    public ResponseEntity<List<DiscussionThreadDTO>> getMostActiveThreads(
+            @RequestParam(defaultValue = "5") int limit) {
+        try {
+            Pageable pageable = PageRequest.of(0, limit);
+            Page<DiscussionThread> threads = threadService.getMostActiveThreads(pageable);
+            List<DiscussionThreadDTO> threadDTOs = threads.getContent().stream()
+                    .map(this::convertToDTO)
+                    .toList();
+
+            logger.debug("Retrieved {} most active threads", threadDTOs.size());
+            return ResponseEntity.ok(threadDTOs);
+        } catch (Exception e) {
+            logger.error("Error retrieving most active threads", e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    /**
      * Searches for discussion threads based on query string.
      */
     @GetMapping("/search")

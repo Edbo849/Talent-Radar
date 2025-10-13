@@ -66,6 +66,15 @@ public interface PlayerRatingRepository extends JpaRepository<PlayerRating, Long
             + "ORDER BY r.category.name")
     List<Object[]> findAverageRatingsByPlayerIdGroupedByCategory(@Param("playerId") Long playerId);
 
+    // Get top rated players overall
+    @Query("SELECT pr.player, AVG(pr.rating) as avgRating "
+            + "FROM PlayerRating pr "
+            + "WHERE pr.isActive = true "
+            + "GROUP BY pr.player "
+            + "HAVING COUNT(pr) >= 3"
+            + "ORDER BY avgRating DESC")
+    List<Object[]> findTopRatedPlayersOverall(Pageable pageable);
+
     /* Count methods */
     // Count ratings for a player in a specific category
     @Query("SELECT COUNT(pr) FROM PlayerRating pr WHERE pr.player = :player AND pr.category = :category AND pr.isActive = true")

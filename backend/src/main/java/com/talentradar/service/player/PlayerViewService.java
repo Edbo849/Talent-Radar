@@ -202,6 +202,7 @@ public class PlayerViewService {
             // Get players with most views in the last 7 days
             LocalDateTime oneWeekAgo = LocalDateTime.now().minusDays(7);
             Page<Player> trendingPlayers = playerRepository.findTrendingPlayersByWeeklyViews(oneWeekAgo, pageable);
+            logger.info("Trending players: {}", trendingPlayers);
 
             logger.info("Calculated {} trending players", trendingPlayers.getNumberOfElements());
 

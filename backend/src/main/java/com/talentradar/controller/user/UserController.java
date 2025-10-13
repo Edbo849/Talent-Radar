@@ -1,6 +1,7 @@
 package com.talentradar.controller.user;
 
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -150,6 +152,77 @@ public class UserController {
         } catch (Exception e) {
             logger.error("Error retrieving user: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to retrieve user", e);
+        }
+    }
+
+    // Add to backend/src/main/java/com/talentradar/controller/user/UserController.java
+    /**
+     * Get user activity statistics
+     */
+    @GetMapping("/my-activity")
+    public ResponseEntity<Map<String, Object>> getMyActivity(
+            HttpServletRequest request) {
+        try {
+            User user = userService.getCurrentUser(request);
+
+            Map<String, Object> activity = userService.getUserActivityStats(user);
+
+            logger.info("Retrieved activity for user: {}", user.getUsername());
+            return ResponseEntity.ok(activity);
+        } catch (UserNotFoundException e) {
+            logger.warn("User not found when retrieving activity");
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            logger.error("Error retrieving user activity", e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    /**
+     * Get platform statistics (admin only)
+     */
+    @GetMapping("/platform-stats")
+    public ResponseEntity<Map<String, Object>> getPlatformStats(HttpServletRequest request) {
+        try {
+            User user = userService.getCurrentUser(request);
+
+            // Check if user is admin
+            if (!"ADMIN".equals(user.getRole().toString())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+
+            Map<String, Object> stats = userService.getPlatformStatistics();
+
+            logger.info("Retrieved platform stats for admin: {}", user.getUsername());
+            return ResponseEntity.ok(stats);
+        } catch (UserNotFoundException e) {
+            logger.warn("User not found when retrieving platform stats");
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            logger.error("Error retrieving platform stats", e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    /**
+     * Get admin statistics
+     */
+    @GetMapping("/admin-stats")
+    public ResponseEntity<Map<String, Object>> getAdminStats(HttpServletRequest request) {
+        try {
+            User user = userService.getCurrentUser(request);
+
+            if (!"ADMIN".equals(user.getRole().toString())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+
+            Map<String, Object> adminData = userService.getAdminStatistics();
+
+            logger.info("Retrieved admin data for user: {}", user.getUsername());
+            return ResponseEntity.ok(adminData);
+        } catch (Exception e) {
+            logger.error("Error retrieving admin data", e);
+            return ResponseEntity.internalServerError().build();
         }
     }
 

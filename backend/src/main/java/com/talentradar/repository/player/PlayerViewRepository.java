@@ -61,7 +61,7 @@ public interface PlayerViewRepository extends JpaRepository<PlayerView, Long> {
     List<PlayerView> findTop10ByPlayerOrderByCreatedAtDesc(Player player);
 
     // User's recent views
-    List<PlayerView> findTop50ByUserOrderByCreatedAtDesc(User user);
+    List<PlayerView> findTop20ByUserOrderByCreatedAtDesc(User user);
 
     /* Count methods */
     // Count total views for a player

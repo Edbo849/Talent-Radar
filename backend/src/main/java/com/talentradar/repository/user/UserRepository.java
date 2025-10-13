@@ -123,6 +123,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
     // Find users with verified emails
     List<User> findByEmailVerifiedAtIsNotNull();
 
+    /* Top users by reputation */
+    // Find top 10 users by reputation score
+    List<User> findTop10ByOrderByReputationScoreDesc();
+
+
     /* Expertise queries (for JSON fields) */
     // Find users with expertise in specific league
     @Query("SELECT u FROM User u WHERE u.expertiseLeaguesJson LIKE %:league%")
@@ -138,6 +143,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     // Count verified users
     long countByIsVerifiedTrue();
+
+    // Count users created after a certain date
+    long countByCreatedAtAfter(LocalDateTime since);
 
     // Count users by role
     long countByRole(UserRole role);

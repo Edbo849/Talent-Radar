@@ -1,8 +1,11 @@
 package com.talentradar.service.user;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,8 +20,13 @@ import com.talentradar.dto.user.UserUpdateDTO;
 import com.talentradar.exception.UserNotFoundException;
 import com.talentradar.model.enums.BadgeLevel;
 import com.talentradar.model.enums.UserRole;
+import com.talentradar.model.player.PlayerRating;
+import com.talentradar.model.player.PlayerView;
 import com.talentradar.model.user.User;
 import com.talentradar.model.user.UserFollow;
+import com.talentradar.repository.player.PlayerRatingRepository;
+import com.talentradar.repository.player.PlayerViewRepository;
+import com.talentradar.repository.scouting.ScoutingReportRepository;
 import com.talentradar.repository.user.UserFollowRepository;
 import com.talentradar.repository.user.UserRepository;
 import com.talentradar.security.JwtUtil;
@@ -46,6 +54,15 @@ public class UserService {
 
     @Autowired
     private JwtUtil jwtUtil;
+
+    @Autowired
+    private PlayerViewRepository playerViewRepository;
+
+    @Autowired
+    private PlayerRatingRepository playerRatingRepository;
+
+    @Autowired
+    private ScoutingReportRepository scoutingReportRepository;
 
     /**
      * Retrieves the current status of scheduled tasks.
@@ -321,6 +338,87 @@ public class UserService {
         } catch (Exception e) {
             logger.debug("Error extracting token from request: {}", e.getMessage());
             return null;
+        }
+    }
+
+    /**
+     * Get user activity statistics
+     */
+    @Transactional(readOnly = true)
+    public Map<String, Object> getUserActivityStats(User user) {
+        Map<String, Object> activity = new HashMap<>();
+
+        try {
+            // Recent activity counts
+            LocalDateTime weekAgo = LocalDateTime.now().minusDays(7);
+
+            // Get weekly views
+            Long weeklyViews = playerViewRepository.countByUserAndViewedAtAfter(user, weekAgo);
+            activity.put("weeklyViews", weeklyViews);
+
+            // Get total reports by user
+            Long totalReports = scoutingReportRepository.countByScout(user);
+            activity.put("totalReports", totalReports);
+
+            // Get recent views
+            List<PlayerView> recentViews = playerViewRepository.findTop20ByUserOrderByCreatedAtDesc(user);
+            activity.put("recentViews", recentViews);
+
+            // Get recent ratings
+            List<PlayerRating> recentRatings = playerRatingRepository.findByUserAndIsActiveTrueOrderByCreatedAtDesc(user)
+                    .stream().limit(10).collect(Collectors.toList());
+            activity.put("recentRatings", recentRatings);
+
+            return activity;
+        } catch (Exception e) {
+            logger.error("Error retrieving user activity stats: {}", e.getMessage());
+            return activity;
+        }
+    }
+
+    /**
+     * Get platform statistics
+     */
+    @Transactional(readOnly = true)
+    public Map<String, Object> getPlatformStatistics() {
+        Map<String, Object> stats = new HashMap<>();
+
+        try {
+            stats.put("totalUsers", userRepository.count());
+
+            LocalDateTime last24h = LocalDateTime.now().minusDays(1);
+            stats.put("newUsersLast24h", userRepository.countByCreatedAtAfter(last24h));
+
+            return stats;
+        } catch (Exception e) {
+            logger.error("Error retrieving platform statistics: {}", e.getMessage());
+            return stats;
+        }
+    }
+
+    /**
+     * Get admin statistics
+     */
+    @Transactional(readOnly = true)
+    public Map<String, Object> getAdminStatistics() {
+        Map<String, Object> adminData = new HashMap<>();
+
+        try {
+            long totalUsers = userRepository.count();
+            LocalDateTime lastWeek = LocalDateTime.now().minusDays(7);
+            long newUsersThisWeek = userRepository.countByCreatedAtAfter(lastWeek);
+
+            adminData.put("totalUsers", totalUsers);
+            adminData.put("newUsersThisWeek", newUsersThisWeek);
+
+            // Top users by reputation
+            List<User> topUsers = userRepository.findTop10ByOrderByReputationScoreDesc();
+            adminData.put("topUsers", topUsers);
+
+            return adminData;
+        } catch (Exception e) {
+            logger.error("Error retrieving admin statistics: {}", e.getMessage());
+            return adminData;
         }
     }
 

@@ -80,6 +80,9 @@ public interface ScoutingReportRepository extends JpaRepository<ScoutingReport, 
     // Find public reports by status
     Page<ScoutingReport> findByIsPublicTrueAndStatusOrderByCreatedAtDesc(ReportStatus status, Pageable pageable);
 
+    // Find reports by public status ordered by creation date
+    Page<ScoutingReport> findByIsPublicTrueOrderByCreatedAtDesc(Pageable pageable);
+
     /* Rating-based finder methods */
     // Find reports by overall rating
     List<ScoutingReport> findByOverallRating(Integer overallRating);
@@ -204,6 +207,9 @@ public interface ScoutingReportRepository extends JpaRepository<ScoutingReport, 
 
     // Count reports by status
     long countByStatus(ReportStatus status);
+
+    // Count reports by scout and status
+    long countByScoutAndStatus(User scout, ReportStatus status);
 
     /* Analytics and statistics methods */
     // Find average rating for a player

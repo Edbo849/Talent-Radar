@@ -48,12 +48,19 @@ public class PlayerDTO {
     private Integer totalViews;
     private Integer weeklyViews;
     private Integer monthlyViews;
+    private Double weeklyGrowthPercentage;
 
     // Current club information (derived from currentClub relationship)
     private Long currentClubId;
     private String currentClubName;
     private String currentClubLogoUrl;
     private String currentClubCountry;
+    private List<String> seasonClubs;
+
+    // Current league information
+    private String currentLeagueId;
+    private String currentLeagueName;
+    private String currentLeagueLogoUrl;
 
     // Statistics summary (latest season - derived fields)
     private Integer appearances;
@@ -344,6 +351,14 @@ public class PlayerDTO {
         this.monthlyViews = monthlyViews;
     }
 
+    public Double getWeeklyGrowthPercentage() {
+        return weeklyGrowthPercentage;
+    }
+
+    public void setWeeklyGrowthPercentage(Double weeklyGrowthPercentage) {
+        this.weeklyGrowthPercentage = weeklyGrowthPercentage;
+    }
+
     public Long getCurrentClubId() {
         return currentClubId;
     }
@@ -374,6 +389,38 @@ public class PlayerDTO {
 
     public void setCurrentClubCountry(String currentClubCountry) {
         this.currentClubCountry = currentClubCountry;
+    }
+
+    public List<String> getSeasonClubs() {
+        return seasonClubs;
+    }
+
+    public void setSeasonClubs(List<String> seasonClubs) {
+        this.seasonClubs = seasonClubs;
+    }
+
+    public String getCurrentLeagueId() {
+        return currentLeagueId;
+    }
+
+    public void setCurrentLeagueId(String currentLeagueId) {
+        this.currentLeagueId = currentLeagueId;
+    }
+
+    public String getCurrentLeagueName() {
+        return currentLeagueName;
+    }
+
+    public void setCurrentLeagueName(String currentLeagueName) {
+        this.currentLeagueName = currentLeagueName;
+    }
+
+    public String getCurrentLeagueLogoUrl() {
+        return currentLeagueLogoUrl;
+    }
+
+    public void setCurrentLeagueLogoUrl(String currentLeagueLogoUrl) {
+        this.currentLeagueLogoUrl = currentLeagueLogoUrl;
     }
 
     public Integer getAppearances() {

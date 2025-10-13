@@ -303,6 +303,30 @@ public class PollController {
     }
 
     /**
+     * Get active polls
+     */
+    @GetMapping("/active")
+    public ResponseEntity<List<PollDTO>> getActivePolls(
+            @RequestParam(defaultValue = "3") int limit,
+            HttpServletRequest request) {
+        try {
+            User currentUser = userService.getCurrentUserOrNull(request);
+
+            Pageable pageable = PageRequest.of(0, limit);
+            Page<Poll> polls = pollService.getActivePolls(pageable);
+            List<PollDTO> pollDTOs = polls.getContent().stream()
+                    .map(poll -> convertToDTO(poll, currentUser, request))
+                    .toList();
+
+            logger.debug("Retrieved {} active polls", pollDTOs.size());
+            return ResponseEntity.ok(pollDTOs);
+        } catch (Exception e) {
+            logger.error("Error retrieving active polls", e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    /**
      * Extracts client IP address from HTTP request.
      */
     private String getClientIpAddress(HttpServletRequest request) {
