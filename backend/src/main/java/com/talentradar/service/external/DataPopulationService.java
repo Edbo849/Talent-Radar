@@ -931,7 +931,6 @@ public class DataPopulationService {
 
         target.setPassesTotal(source.getPassesTotal());
         target.setPassesKey(source.getPassesKey());
-        target.setPassAccuracy(source.getPassAccuracy());
 
         target.setTacklesTotal(source.getTacklesTotal());
         target.setTacklesBlocks(source.getTacklesBlocks());

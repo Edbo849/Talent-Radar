@@ -18,8 +18,18 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.talentradar.dto.player.PlayerDTO;
+import com.talentradar.dto.player.PlayerInjuryDTO;
+import com.talentradar.dto.player.PlayerSidelinedDTO;
+import com.talentradar.dto.player.PlayerStatisticDTO;
+import com.talentradar.dto.player.PlayerTransferDTO;
+import com.talentradar.dto.player.PlayerTrophyDTO;
 import com.talentradar.exception.PlayerNotFoundException;
 import com.talentradar.model.player.Player;
+import com.talentradar.model.player.PlayerInjury;
+import com.talentradar.model.player.PlayerSidelined;
+import com.talentradar.model.player.PlayerStatistic;
+import com.talentradar.model.player.PlayerTransfer;
+import com.talentradar.model.player.PlayerTrophy;
 import com.talentradar.service.player.PlayerService;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -230,7 +240,6 @@ public class PlayerController {
             logger.info("Retrieved {} top rated players for 2025", playerDTOs.size());
 
             if (!playerDTOs.isEmpty()) {
-                PlayerDTO firstPlayer = playerDTOs.get(0);
                 return ResponseEntity.ok(playerDTOs);
             }
         } catch (Exception e) {
@@ -263,6 +272,195 @@ public class PlayerController {
             return ResponseEntity.ok(playerDTOs);
         } catch (Exception e) {
             logger.error("Error retrieving U21 players", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * Retrieves all statistics for a specific player.
+     */
+    @GetMapping("/{playerId}/statistics")
+    public ResponseEntity<List<PlayerStatisticDTO>> getPlayerStatistics(
+            @PathVariable Long playerId,
+            HttpServletRequest request) {
+
+        try {
+            logger.debug("Retrieving statistics for player: {}", playerId);
+
+            // Verify player exists
+            playerService.findById(playerId)
+                    .orElseThrow(() -> new PlayerNotFoundException("Player not found with ID: " + playerId));
+
+            List<PlayerStatistic> statistics = playerService.getPlayerStatistics(playerId);
+            List<PlayerStatisticDTO> statisticDTOs = statistics.stream()
+                    .map(this::convertToDTO)
+                    .toList();
+
+            logger.info("Retrieved {} statistics for player {}", statisticDTOs.size(), playerId);
+            return ResponseEntity.ok(statisticDTOs);
+
+        } catch (PlayerNotFoundException e) {
+            logger.warn("Player not found when retrieving statistics: {}", playerId);
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            logger.error("Error retrieving statistics for player: {}", playerId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * Retrieves all transfers for a specific player.
+     */
+    @GetMapping("/{playerId}/transfers")
+    public ResponseEntity<List<PlayerTransferDTO>> getPlayerTransfers(
+            @PathVariable Long playerId,
+            HttpServletRequest request) {
+
+        try {
+            logger.debug("Retrieving transfers for player: {}", playerId);
+
+            // Verify player exists
+            Player player = playerService.findById(playerId)
+                    .orElseThrow(() -> new PlayerNotFoundException("Player not found with ID: " + playerId));
+
+            List<PlayerTransfer> transfers = playerService.getPlayerTransfers(player);
+            List<PlayerTransferDTO> transferDTOs = transfers.stream()
+                    .map(this::convertToDTO)
+                    .toList();
+
+            logger.info("Retrieved {} transfers for player {}", transferDTOs.size(), playerId);
+            return ResponseEntity.ok(transferDTOs);
+
+        } catch (PlayerNotFoundException e) {
+            logger.warn("Player not found when retrieving transfers: {}", playerId);
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            logger.error("Error retrieving transfers for player: {}", playerId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * Retrieves all injuries for a specific player.
+     */
+    @GetMapping("/{playerId}/injuries")
+    public ResponseEntity<List<PlayerInjuryDTO>> getPlayerInjuries(
+            @PathVariable Long playerId,
+            HttpServletRequest request) {
+
+        try {
+            logger.debug("Retrieving injuries for player: {}", playerId);
+
+            // Verify player exists
+            Player player = playerService.findById(playerId)
+                    .orElseThrow(() -> new PlayerNotFoundException("Player not found with ID: " + playerId));
+
+            List<PlayerInjury> injuries = playerService.getPlayerInjuries(player);
+            List<PlayerInjuryDTO> injuryDTOs = injuries.stream()
+                    .map(this::convertToDTO)
+                    .toList();
+
+            logger.info("Retrieved {} injuries for player {}", injuryDTOs.size(), playerId);
+            return ResponseEntity.ok(injuryDTOs);
+
+        } catch (PlayerNotFoundException e) {
+            logger.warn("Player not found when retrieving injuries: {}", playerId);
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            logger.error("Error retrieving injuries for player: {}", playerId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * Retrieves all sidelined periods for a specific player.
+     */
+    @GetMapping("/{playerId}/sidelined")
+    public ResponseEntity<List<PlayerSidelinedDTO>> getPlayerSidelined(
+            @PathVariable Long playerId,
+            HttpServletRequest request) {
+
+        try {
+            logger.debug("Retrieving sidelined periods for player: {}", playerId);
+
+            // Verify player exists
+            Player player = playerService.findById(playerId)
+                    .orElseThrow(() -> new PlayerNotFoundException("Player not found with ID: " + playerId));
+
+            List<PlayerSidelined> sidelinedPeriods = player.getSidelinedPeriods().stream()
+                    .sorted((s1, s2) -> {
+                        if (s1.getStartDate() == null && s2.getStartDate() == null) {
+                            return 0;
+                        }
+                        if (s1.getStartDate() == null) {
+                            return 1;
+                        }
+                        if (s2.getStartDate() == null) {
+                            return -1;
+                        }
+                        return s2.getStartDate().compareTo(s1.getStartDate());
+                    })
+                    .toList();
+
+            List<PlayerSidelinedDTO> sidelinedDTOs = sidelinedPeriods.stream()
+                    .map(this::convertToDTO)
+                    .toList();
+
+            logger.info("Retrieved {} sidelined periods for player {}", sidelinedDTOs.size(), playerId);
+            return ResponseEntity.ok(sidelinedDTOs);
+
+        } catch (PlayerNotFoundException e) {
+            logger.warn("Player not found when retrieving sidelined periods: {}", playerId);
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            logger.error("Error retrieving sidelined periods for player: {}", playerId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * Retrieves all trophies for a specific player.
+     */
+    @GetMapping("/{playerId}/trophies")
+    public ResponseEntity<List<PlayerTrophyDTO>> getPlayerTrophies(
+            @PathVariable Long playerId,
+            HttpServletRequest request) {
+
+        try {
+            logger.debug("Retrieving trophies for player: {}", playerId);
+
+            // Verify player exists
+            Player player = playerService.findById(playerId)
+                    .orElseThrow(() -> new PlayerNotFoundException("Player not found with ID: " + playerId));
+
+            List<PlayerTrophy> trophies = player.getTrophies().stream()
+                    .sorted((t1, t2) -> {
+                        // Sort by season (most recent first)
+                        if (t1.getSeason() == null && t2.getSeason() == null) {
+                            return 0;
+                        }
+                        if (t1.getSeason() == null) {
+                            return 1;
+                        }
+                        if (t2.getSeason() == null) {
+                            return -1;
+                        }
+                        return t2.getSeason().compareTo(t1.getSeason());
+                    })
+                    .toList();
+
+            List<PlayerTrophyDTO> trophyDTOs = trophies.stream()
+                    .map(this::convertToDTO)
+                    .toList();
+
+            logger.info("Retrieved {} trophies for player {}", trophyDTOs.size(), playerId);
+            return ResponseEntity.ok(trophyDTOs);
+
+        } catch (PlayerNotFoundException e) {
+            logger.warn("Player not found when retrieving trophies: {}", playerId);
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            logger.error("Error retrieving trophies for player: {}", playerId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -311,4 +509,158 @@ public class PlayerController {
 
         return dto;
     }
+
+    private PlayerStatisticDTO convertToDTO(PlayerStatistic statistic) {
+        PlayerStatisticDTO dto = new PlayerStatisticDTO();
+        dto.setId(statistic.getId());
+        dto.setPlayerId(statistic.getPlayer().getId());
+        dto.setPlayerName(statistic.getPlayer().getName());
+        dto.setSeason(statistic.getSeason());
+
+        // Basic stats
+        dto.setAppearances(statistic.getAppearances());
+        dto.setLineups(statistic.getLineups());
+        dto.setMinutesPlayed(statistic.getMinutesPlayed());
+        dto.setPosition(statistic.getPosition());
+        dto.setRating(statistic.getRating());
+        dto.setIsCaptain(statistic.getIsCaptain());
+
+        // Goals and assists
+        dto.setGoals(statistic.getGoals());
+        dto.setAssists(statistic.getAssists());
+        dto.setGoalsConceded(statistic.getGoalsConceded());
+        dto.setSaves(statistic.getSaves());
+
+        // Shooting stats
+        dto.setShotsTotal(statistic.getShotsTotal());
+        dto.setShotsOnTarget(statistic.getShotsOnTarget());
+
+        // Passing stats
+        dto.setPassesTotal(statistic.getPassesTotal());
+        dto.setPassesKey(statistic.getPassesKey());
+
+        // Defensive stats
+        dto.setTacklesTotal(statistic.getTacklesTotal());
+        dto.setTacklesBlocks(statistic.getTacklesBlocks());
+        dto.setInterceptions(statistic.getInterceptions());
+
+        // Dribbling stats
+        dto.setDribblesAttempts(statistic.getDribblesAttempts());
+        dto.setDribblesSuccess(statistic.getDribblesSuccess());
+
+        // Disciplinary stats
+        dto.setFoulsDrawn(statistic.getFoulsDrawn());
+        dto.setFoulsCommitted(statistic.getFoulsCommitted());
+        dto.setYellowCards(statistic.getYellowCards());
+        dto.setRedCards(statistic.getRedCards());
+
+        // Penalty stats
+        dto.setPenaltiesWon(statistic.getPenaltiesWon());
+        dto.setPenaltiesScored(statistic.getPenaltiesScored());
+        dto.setPenaltiesMissed(statistic.getPenaltiesMissed());
+
+        // Substitution stats
+        dto.setSubstitutesIn(statistic.getSubstitutesIn());
+        dto.setSubstitutesOut(statistic.getSubstitutesOut());
+        dto.setSubstitutesBench(statistic.getSubstitutesBench());
+
+        // Timestamps
+        dto.setCreatedAt(statistic.getCreatedAt());
+        dto.setUpdatedAt(statistic.getUpdatedAt());
+
+        // Club context
+        if (statistic.getClub() != null) {
+            dto.setClubId(statistic.getClub().getId());
+            dto.setClubName(statistic.getClub().getName());
+            dto.setClubLogoUrl(statistic.getClub().getLogoUrl());
+        }
+
+        // League context
+        if (statistic.getLeague() != null) {
+            dto.setLeagueId(statistic.getLeague().getId());
+            dto.setLeagueName(statistic.getLeague().getName());
+            dto.setLeagueLogoUrl(statistic.getLeague().getLogoUrl());
+        }
+
+        // Calculate derived statistics
+        dto.calculateDerivedStats();
+
+        return dto;
+    }
+
+    /**
+     * Converts a PlayerTransfer entity to a PlayerTransferDTO.
+     */
+    private PlayerTransferDTO convertToDTO(PlayerTransfer transfer) {
+        PlayerTransferDTO dto = new PlayerTransferDTO();
+        dto.setId(transfer.getId());
+        dto.setPlayerId(transfer.getPlayer().getId());
+        dto.setFromClub(transfer.getClubFrom() != null ? transfer.getClubFrom().getName() : null);
+        dto.setToClub(transfer.getClubTo() != null ? transfer.getClubTo().getName() : null);
+        dto.setFromClubLogoUrl(transfer.getClubFrom() != null ? transfer.getClubFrom().getLogoUrl() : null);
+        dto.setToClubLogoUrl(transfer.getClubTo() != null ? transfer.getClubTo().getLogoUrl() : null);
+        dto.setTransferDate(transfer.getTransferDate());
+        dto.setTransferType(transfer.getTransferType());
+        dto.setCreatedAt(transfer.getCreatedAt());
+        return dto;
+    }
+
+    /**
+     * Converts a PlayerInjury entity to a PlayerInjuryDTO.
+     */
+    private PlayerInjuryDTO convertToDTO(PlayerInjury injury) {
+        PlayerInjuryDTO dto = new PlayerInjuryDTO();
+        dto.setId(injury.getId());
+        dto.setPlayerId(injury.getPlayer().getId());
+        dto.setInjuryType(injury.getInjuryType());
+        dto.setReason(injury.getReason());
+        dto.setStartDate(injury.getStartDate());
+        dto.setFixtureId(injury.getFixtureId());
+        dto.setCreatedAt(injury.getCreatedAt());
+
+        // Map club details if available
+        if (injury.getClub() != null) {
+            dto.setClubId(injury.getClub().getId());
+            dto.setClubName(injury.getClub().getName());
+        }
+
+        // Map league details if available
+        if (injury.getLeague() != null) {
+            dto.setLeagueId(injury.getLeague().getId());
+            dto.setLeagueName(injury.getLeague().getName());
+            dto.setLeagueLogoUrl(injury.getLeague().getLogoUrl());
+
+        }
+        return dto;
+    }
+
+    /**
+     * Converts a PlayerSidelined entity to a PlayerSidelinedDTO.
+     */
+    private PlayerSidelinedDTO convertToDTO(PlayerSidelined sidelined) {
+        PlayerSidelinedDTO dto = new PlayerSidelinedDTO();
+        dto.setId(sidelined.getId());
+        dto.setPlayerId(sidelined.getPlayer().getId());
+        dto.setType(sidelined.getType());
+        dto.setStartDate(sidelined.getStartDate());
+        dto.setEndDate(sidelined.getEndDate());
+        dto.setCreatedAt(sidelined.getCreatedAt());
+        return dto;
+    }
+
+    /**
+     * Converts a PlayerTrophy entity to a PlayerTrophyDTO.
+     */
+    private PlayerTrophyDTO convertToDTO(PlayerTrophy trophy) {
+        PlayerTrophyDTO dto = new PlayerTrophyDTO();
+        dto.setId(trophy.getId());
+        dto.setPlayerId(trophy.getPlayer().getId());
+        dto.setLeagueName(trophy.getLeagueName());
+        dto.setCountry(trophy.getCountry());
+        dto.setSeason(trophy.getSeason());
+        dto.setPlace(trophy.getPlace());
+        dto.setCreatedAt(trophy.getCreatedAt());
+        return dto;
+    }
+
 }

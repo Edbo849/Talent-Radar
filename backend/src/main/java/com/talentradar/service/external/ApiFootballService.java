@@ -1381,14 +1381,6 @@ public class ApiFootballService {
                 if (passes.has("key") && !passes.get("key").isNull()) {
                     stats.setPassesKey(passes.get("key").asInt());
                 }
-                if (passes.has("accuracy") && !passes.get("accuracy").isNull()) {
-                    try {
-                        int accuracyInt = passes.get("accuracy").asInt();
-                        stats.setPassAccuracy(BigDecimal.valueOf(accuracyInt));
-                    } catch (NumberFormatException e) {
-                        logger.warn("Could not parse pass accuracy: {}", e.getMessage());
-                    }
-                }
             }
 
             // Parse tackles

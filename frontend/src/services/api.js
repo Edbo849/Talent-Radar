@@ -206,6 +206,69 @@ class ApiService {
     );
     return response;
   }
+
+  async getPlayer(playerId) {
+    const response = await this.request(`/players/${playerId}`, "GET");
+    return response;
+  }
+
+  async getPlayerStatistics(playerId) {
+    const response = await this.request(
+      `/players/${playerId}/statistics`,
+      "GET"
+    );
+    return response;
+  }
+
+  async getPlayerTransfers(playerId) {
+    const response = await this.request(
+      `/players/${playerId}/transfers`,
+      "GET"
+    );
+    return response;
+  }
+
+  async getPlayerInjuries(playerId) {
+    const response = await this.request(`/players/${playerId}/injuries`, "GET");
+    return response;
+  }
+
+  async getPlayerTrophies(playerId) {
+    const response = await this.request(`/players/${playerId}/trophies`, "GET");
+    return response;
+  }
+
+  async getPlayerComments(playerId, page = 0, size = 10) {
+    const response = await this.request(
+      `/players/${playerId}/comments?page=${page}&size=${size}`,
+      "GET"
+    );
+    return response;
+  }
+
+  async getPlayerRatings(playerId, page = 0, size = 10) {
+    const response = await this.request(
+      `/players/${playerId}/ratings?page=${page}&size=${size}`,
+      "GET"
+    );
+    return response;
+  }
+
+  async getPlayerScoutingReports(playerId, page = 0, size = 10) {
+    const response = await this.request(
+      `/scouting-reports/player/${playerId}?page=${page}&size=${size}`,
+      "GET"
+    );
+    return response;
+  }
+
+  async getPlayerSidelined(playerId) {
+    const response = await this.request(
+      `/players/${playerId}/sidelined`,
+      "GET"
+    );
+    return response;
+  }
 }
 
 // Export a singleton instance of ApiService

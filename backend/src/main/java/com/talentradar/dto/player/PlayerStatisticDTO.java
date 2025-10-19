@@ -25,6 +25,7 @@ public class PlayerStatisticDTO {
     // League context
     private Long leagueId;
     private String leagueName;
+    private String leagueLogoUrl;
 
     // Season
     private Integer season;
@@ -50,7 +51,6 @@ public class PlayerStatisticDTO {
     // Passing statistics
     private Integer passesTotal;
     private Integer passesKey;
-    private BigDecimal passAccuracy;
 
     // Defensive statistics
     private Integer tacklesTotal;
@@ -103,26 +103,36 @@ public class PlayerStatisticDTO {
         // Calculate goals per game
         if (appearances != null && appearances > 0 && goals != null) {
             this.goalsPerGame = (double) goals / appearances;
+        } else {
+            this.goalsPerGame = 0.0;
         }
 
         // Calculate assists per game
         if (appearances != null && appearances > 0 && assists != null) {
             this.assistsPerGame = (double) assists / appearances;
+        } else {
+            this.assistsPerGame = 0.0;
         }
 
         // Calculate minutes per game
         if (appearances != null && appearances > 0 && minutesPlayed != null) {
             this.minutesPerGame = (double) minutesPlayed / appearances;
+        } else {
+            this.minutesPerGame = 0.0;
         }
 
         // Calculate dribble success rate
         if (dribblesAttempts != null && dribblesAttempts > 0 && dribblesSuccess != null) {
             this.dribbleSuccessRate = ((double) dribblesSuccess / dribblesAttempts) * 100;
+        } else {
+            this.dribbleSuccessRate = 0.0;
         }
 
         // Calculate shot accuracy
         if (shotsTotal != null && shotsTotal > 0 && shotsOnTarget != null) {
             this.shotAccuracy = ((double) shotsOnTarget / shotsTotal) * 100;
+        } else {
+            this.shotAccuracy = 0.0;
         }
     }
 
@@ -189,6 +199,14 @@ public class PlayerStatisticDTO {
 
     public void setLeagueName(String leagueName) {
         this.leagueName = leagueName;
+    }
+
+    public String getLeagueLogoUrl() {
+        return leagueLogoUrl;
+    }
+
+    public void setLeagueLogoUrl(String leagueLogoUrl) {
+        this.leagueLogoUrl = leagueLogoUrl;
     }
 
     public Integer getSeason() {
@@ -309,14 +327,6 @@ public class PlayerStatisticDTO {
 
     public void setPassesKey(Integer passesKey) {
         this.passesKey = passesKey;
-    }
-
-    public BigDecimal getPassAccuracy() {
-        return passAccuracy;
-    }
-
-    public void setPassAccuracy(BigDecimal passAccuracy) {
-        this.passAccuracy = passAccuracy;
     }
 
     public Integer getTacklesTotal() {

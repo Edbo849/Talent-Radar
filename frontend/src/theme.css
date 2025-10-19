@@ -85,11 +85,3 @@
   --z-tooltip: 1070;
 }
 
-/* Dark mode variables (optional) */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-navy-primary: #253046;
-    --color-navy-light: #1a2332;
-    --color-navy-dark: #080c12;
-  }
-}

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { useAuth } from "../context/AuthContext";
+import { useNavigate, Link } from "react-router-dom";
 import Navbar from "./Navbar";
+import { useAuth } from "../context/AuthContext";
 import ApiService from "../services/api";
 import FlagService from "../services/flagService";
 import "./static/Dashboard.css";
@@ -9,9 +10,14 @@ const CountryFlag = ({ nationality, className = "nationality-flag" }) => {
   const [flag, setFlag] = useState(null);
 
   useEffect(() => {
-    if (nationality) {
+    const loadFlag = async () => {
+      await FlagService.loadCountries();
       const flagData = FlagService.getFlag(nationality);
       setFlag(flagData);
+    };
+
+    if (nationality) {
+      loadFlag();
     }
   }, [nationality]);
 
@@ -21,14 +27,10 @@ const CountryFlag = ({ nationality, className = "nationality-flag" }) => {
     return (
       <img
         src={flag.value}
-        alt={`${nationality} flag`}
+        alt={nationality}
         className={`${className} flag-image`}
         onError={(e) => {
-          // Fallback to emoji if image fails to load
-          const emoji = FlagService.getEmojiFlag(nationality);
           e.target.style.display = "none";
-          e.target.nextSibling.style.display = "inline";
-          e.target.nextSibling.textContent = emoji;
         }}
       />
     );
@@ -43,6 +45,7 @@ const CountryFlag = ({ nationality, className = "nationality-flag" }) => {
  */
 const Dashboard = () => {
   const { user, token } = useAuth();
+  const navigate = useNavigate();
   const [dashboardData, setDashboardData] = useState({
     trendingPlayers: [],
     topRatedPlayers: [],
@@ -62,6 +65,11 @@ const Dashboard = () => {
     FlagService.loadCountries();
     loadDashboardData();
   }, [user, token]);
+
+  // Function to navigate to player page
+  const handlePlayerClick = (playerId) => {
+    navigate(`/player/${playerId}`);
+  };
 
   // function to load more players
   const loadMorePlayers = async () => {
@@ -183,12 +191,14 @@ const Dashboard = () => {
           <AdminDashboard
             adminData={dashboardData.adminData}
             platformStats={dashboardData.platformStats}
+            onPlayerClick={handlePlayerClick}
           />
         ) : user.role === "SCOUT" || user.role === "COACH" ? (
           <ScoutDashboard
             scoutData={dashboardData.scoutData}
             trendingPlayers={dashboardData.trendingPlayers}
             myActivity={dashboardData.myActivity}
+            onPlayerClick={handlePlayerClick}
           />
         ) : (
           <UserDashboard
@@ -199,6 +209,8 @@ const Dashboard = () => {
             activePolls={dashboardData.activePolls}
             myActivity={dashboardData.myActivity}
             topRatedPlayersSeason={dashboardData.topRatedPlayersSeason}
+            onPlayerClick={handlePlayerClick}
+            onLoadMorePlayers={loadMorePlayers}
           />
         )}
       </div>
@@ -206,7 +218,7 @@ const Dashboard = () => {
   );
 };
 
-// Enhanced General User Dashboard
+// General User Dashboard
 const UserDashboard = ({
   trendingPlayers,
   topRatedPlayers,
@@ -215,14 +227,15 @@ const UserDashboard = ({
   activePolls,
   myActivity,
   topRatedPlayersSeason,
+  onPlayerClick,
+  onLoadMorePlayers,
 }) => {
   const [showMorePlayers, setShowMorePlayers] = useState(false);
   const [allPlayers, setAllPlayers] = useState(topRatedPlayersSeason);
 
   const loadMorePlayers = async () => {
     try {
-      const morePlayers = await ApiService.getTopRatedPlayersSeason(50);
-      setAllPlayers(morePlayers);
+      await onLoadMorePlayers();
       setShowMorePlayers(true);
     } catch (error) {
       console.error("Error loading more players:", error);
@@ -253,7 +266,11 @@ const UserDashboard = ({
           <div className="card-content">
             <div className="player-list">
               {trendingPlayers.map((player) => (
-                <div key={player.id} className="trending-player-item">
+                <div
+                  key={player.id}
+                  className="trending-player-item clickable-player"
+                  onClick={() => onPlayerClick(player.id)}
+                >
                   <div className="player-avatar">
                     {player.photoUrl ? (
                       <img src={player.photoUrl} alt={player.name} />
@@ -264,7 +281,7 @@ const UserDashboard = ({
                     )}
                   </div>
                   <div className="player-info">
-                    <h4 className="player-name">{player.name}</h4>
+                    <h4 className="player-name-dash">{player.name}</h4>
                     <div className="player-nationality">
                       {player.nationality && (
                         <>
@@ -325,7 +342,11 @@ const UserDashboard = ({
           <div className="card-content">
             <div className="top-players-season-grid">
               {displayedPlayers.map((player, index) => (
-                <div key={player.id} className="top-player-season-item">
+                <div
+                  key={player.id}
+                  className="top-player-season-item clickable-player"
+                  onClick={() => onPlayerClick(player.id)}
+                >
                   <div className="player-rank">#{index + 1}</div>
                   <div className="player-avatar">
                     {player.photoUrl ? (
@@ -337,7 +358,7 @@ const UserDashboard = ({
                     )}
                   </div>
                   <div className="player-info">
-                    <h4 className="player-name">{player.name}</h4>
+                    <h4 className="player-name-dash">{player.name}</h4>
                     <div className="player-nationality">
                       {player.nationality && (
                         <>
@@ -425,7 +446,11 @@ const UserDashboard = ({
           <div className="card-content">
             <div className="player-list">
               {topRatedPlayers.map((player) => (
-                <div key={player.id} className="trending-player-item">
+                <div
+                  key={player.id}
+                  className="trending-player-item clickable-player"
+                  onClick={() => onPlayerClick(player.id)}
+                >
                   <div className="player-avatar">
                     {player.photoUrl ? (
                       <img src={player.photoUrl} alt={player.name} />
@@ -436,7 +461,7 @@ const UserDashboard = ({
                     )}
                   </div>
                   <div className="player-info">
-                    <h4 className="player-name">{player.name}</h4>
+                    <h4 className="player-name-dash">{player.name}</h4>
                     <p className="player-details">
                       {player.currentClubName} • {player.position} •{" "}
                       {player.age}
@@ -445,8 +470,9 @@ const UserDashboard = ({
                   <div className="trending-stats">
                     <span className="rating-badge">
                       {player.averageRating
-                        ? `${player.averageRating.toFixed(1)}/10`
-                        : "N/A"}
+                        ? player.averageRating.toFixed(1)
+                        : "N/A"}{" "}
+                      ⭐
                     </span>
                   </div>
                 </div>
@@ -456,19 +482,11 @@ const UserDashboard = ({
         </div>
       </div>
 
-      {/* Latest Reports */}
-      <div className="dashboard-section col-span-4">
+      {/* Latest Scouting Reports */}
+      <div className="dashboard-section col-span-8">
         <div className="card">
           <div className="card-header">
-            <h3 className="card-title">
-              <div className="info-tooltip">
-                <span className="info-icon">ⓘ</span>
-                <div className="tooltip-content">
-                  Latest submitted scouting reports
-                </div>
-              </div>
-              📊 Latest Scouting Reports
-            </h3>
+            <h3 className="card-title">📋 Latest Scouting Reports</h3>
             <button className="view-all-btn">View All</button>
           </div>
           <div className="card-content">
@@ -517,15 +535,13 @@ const UserDashboard = ({
                   <div className="discussion-icon">💬</div>
                   <div className="discussion-content">
                     <h4 className="discussion-title">{discussion.title}</h4>
-                    <p className="discussion-meta">
-                      By: {discussion.authorName} • {discussion.repliesCount}{" "}
-                      replies
-                    </p>
+                    <div className="discussion-meta">
+                      <span>{discussion.repliesCount || 0} replies</span> •{" "}
+                      <span>{discussion.viewsCount || 0} views</span>
+                    </div>
                   </div>
-                  <div className="discussion-stats">
-                    <span className="activity-badge">
-                      {discussion.repliesCount}
-                    </span>
+                  <div className="activity-badge">
+                    {discussion.lastActivityHours || 0}h
                   </div>
                 </div>
               ))}
@@ -535,42 +551,37 @@ const UserDashboard = ({
       </div>
 
       {/* Active Polls */}
-      <div className="dashboard-section">
+      <div className="dashboard-section col-span-8">
         <div className="card">
           <div className="card-header">
-            <h3 className="card-title">
-              <div className="info-tooltip">
-                <span className="info-icon">ⓘ</span>
-                <div className="tooltip-content">
-                  Active Polls posted by users
-                </div>
-              </div>
-              🗳️ Active Polls
-            </h3>
+            <h3 className="card-title">🗳️ Active Polls</h3>
             <button className="view-all-btn">View All</button>
           </div>
           <div className="card-content">
             <div className="poll-list">
               {activePolls.map((poll) => (
                 <div key={poll.id} className="poll-item">
-                  <div className="poll-content">
-                    <h4 className="poll-title">{poll.title}</h4>
-                    <p className="poll-meta">
-                      {poll.totalVotes} votes • Ends:{" "}
-                      {new Date(poll.expiresAt).toLocaleDateString()}
-                    </p>
-                    <div className="poll-options">
-                      {poll.options.slice(0, 2).map((option) => (
-                        <div key={option.id} className="poll-option">
-                          <span className="option-text">
-                            {option.optionText}
-                          </span>
-                          <span className="option-votes">
-                            {option.voteCount} votes
-                          </span>
-                        </div>
-                      ))}
-                    </div>
+                  <h4 className="poll-title">{poll.title}</h4>
+                  <div className="poll-meta">
+                    <span>{poll.totalVotes || 0} votes</span> •{" "}
+                    <span>
+                      {poll.daysRemaining
+                        ? `${poll.daysRemaining} days left`
+                        : "Ending soon"}
+                    </span>
+                  </div>
+                  <div className="poll-options">
+                    {poll.options?.slice(0, 2).map((option, index) => (
+                      <div key={index} className="poll-option">
+                        <span className="option-text">{option.text}</span>
+                        <span className="option-votes">
+                          {(
+                            (option.votes / poll.totalVotes) * 100 || 0
+                          ).toFixed(0)}
+                          %
+                        </span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               ))}
@@ -578,61 +589,19 @@ const UserDashboard = ({
           </div>
         </div>
       </div>
-
-      {/* Your Activity */}
-      {myActivity && (
-        <div className="dashboard-section full-width">
-          <div className="card">
-            <div className="card-header">
-              <h3 className="card-title">
-                <div className="info-tooltip">
-                  <span className="info-icon">ⓘ</span>
-                  <div className="tooltip-content">
-                    Your recent activity on Talent Radar
-                  </div>
-                </div>
-                📈 Your Recent Activity
-              </h3>
-            </div>
-            <div className="card-content">
-              <div className="activity-stats">
-                <div className="stat-item">
-                  <div className="stat-value">
-                    {myActivity.weeklyViews || 0}
-                  </div>
-                  <div className="stat-label">Views This Week</div>
-                </div>
-                <div className="stat-item">
-                  <div className="stat-value">
-                    {myActivity.totalReports || 0}
-                  </div>
-                  <div className="stat-label">Total Reports</div>
-                </div>
-                <div className="stat-item">
-                  <div className="stat-value">
-                    {myActivity.recentViews?.length || 0}
-                  </div>
-                  <div className="stat-label">Recent Views</div>
-                </div>
-                <div className="stat-item">
-                  <div className="stat-value">
-                    {myActivity.recentRatings?.length || 0}
-                  </div>
-                  <div className="stat-label">Recent Ratings</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
 
-// Enhanced Scout/Coach Dashboard
-const ScoutDashboard = ({ scoutData, trendingPlayers, myActivity }) => (
+// Scout/Coach Dashboard
+const ScoutDashboard = ({
+  scoutData,
+  trendingPlayers,
+  myActivity,
+  onPlayerClick,
+}) => (
   <div className="dashboard-grid scout-grid">
-    {/* My Reports */}
+    {/* Scouting Reports */}
     {scoutData && (
       <div className="dashboard-section">
         <div className="card">
@@ -683,9 +652,13 @@ const ScoutDashboard = ({ scoutData, trendingPlayers, myActivity }) => (
           <div className="card-content">
             <div className="player-list">
               {scoutData.recentPlayers?.slice(0, 5).map((player) => (
-                <div key={player.id} className="new-player-item">
+                <div
+                  key={player.id}
+                  className="new-player-item clickable-player"
+                  onClick={() => onPlayerClick(player.id)}
+                >
                   <div className="player-info">
-                    <h4 className="player-name">{player.name}</h4>
+                    <h4 className="player-name-dash">{player.name}</h4>
                     <p className="player-details">
                       {player.position} • {player.age} years •{" "}
                       {player.currentClubName}
@@ -712,9 +685,13 @@ const ScoutDashboard = ({ scoutData, trendingPlayers, myActivity }) => (
           <div className="card-content">
             <div className="player-list">
               {scoutData.topGoalScorers?.map((player) => (
-                <div key={player.id} className="stat-player-item">
+                <div
+                  key={player.id}
+                  className="stat-player-item clickable-player"
+                  onClick={() => onPlayerClick(player.id)}
+                >
                   <div className="player-info">
-                    <h4 className="player-name">{player.name}</h4>
+                    <h4 className="player-name-dash">{player.name}</h4>
                     <p className="player-details">
                       {player.position} • {player.currentClubName}
                     </p>
@@ -741,9 +718,13 @@ const ScoutDashboard = ({ scoutData, trendingPlayers, myActivity }) => (
         <div className="card-content">
           <div className="player-list">
             {trendingPlayers.map((player) => (
-              <div key={player.id} className="trending-player-item">
+              <div
+                key={player.id}
+                className="trending-player-item clickable-player"
+                onClick={() => onPlayerClick(player.id)}
+              >
                 <div className="player-info">
-                  <h4 className="player-name">{player.name}</h4>
+                  <h4 className="player-name-dash">{player.name}</h4>
                   <p className="player-details">
                     {player.position} • {player.currentClubName}
                   </p>
@@ -761,7 +742,7 @@ const ScoutDashboard = ({ scoutData, trendingPlayers, myActivity }) => (
 );
 
 // Admin Dashboard
-const AdminDashboard = ({ adminData, platformStats }) => (
+const AdminDashboard = ({ adminData, platformStats, onPlayerClick }) => (
   <div className="dashboard-grid admin-grid">
     {/* Platform Stats */}
     {platformStats && (
@@ -852,7 +833,12 @@ const AdminDashboard = ({ adminData, platformStats }) => (
                       {view.user?.username || "Anonymous"}
                     </span>
                     <span> viewed </span>
-                    <span className="player-name">{view.player?.name}</span>
+                    <span
+                      className="player-name-dash clickable-text"
+                      onClick={() => onPlayerClick(view.player?.id)}
+                    >
+                      {view.player?.name}
+                    </span>
                   </div>
                   <div className="activity-time">
                     {new Date(view.createdAt).toLocaleTimeString()}

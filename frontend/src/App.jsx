@@ -1,7 +1,15 @@
 import React, { useState, useEffect } from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import AuthContainer from "./components/AuthContainer";
 import Dashboard from "./components/Dashboard";
+import Player from "./components/Player";
 import "./App.css";
 import "./components/static/Auth.css";
 import "./utilities.css";
@@ -22,15 +30,23 @@ function AppContent() {
     return <AuthContainer />;
   }
 
-  // If user is authenticated, show dashboard
-  return <Dashboard />;
+  // If user is authenticated, show routed content
+  return (
+    <Routes>
+      <Route path="/" element={<Dashboard />} />
+      <Route path="/player/:playerId" element={<Player />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
 }
 
 function App() {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <Router>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </Router>
   );
 }
 

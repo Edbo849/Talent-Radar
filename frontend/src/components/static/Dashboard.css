@@ -328,8 +328,8 @@
   min-width: 0; /* Allows text to truncate */
 }
 
-.player-name {
-  font-size: var(--font-size-lg);
+.player-name-dash {
+  font-size: var(--font-size-lg) !important;
   font-weight: 600;
   color: var(--color-navy-primary);
   margin: 0 0 var(--spacing-xs) 0;
@@ -454,7 +454,7 @@
 }
 
 /* =========================
-   ENHANCED PLAYER STATS
+   PLAYER STATS
    ========================= */
 .player-stats {
   display: flex;
@@ -580,6 +580,71 @@
   50% {
     opacity: 0.5;
   }
+}
+
+/* =========================
+   CLICKABLE PLAYER ELEMENTS
+   ========================= */
+.clickable-player {
+  cursor: pointer;
+  transition: all var(--transition-base);
+  position: relative;
+}
+
+.clickable-player:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg) !important;
+  border-color: var(--color-accent-blue) !important;
+  background: var(--color-gray-50) !important;
+}
+
+.clickable-player:active {
+  transform: translateY(0);
+}
+
+.clickable-text {
+  color: var(--color-accent-blue);
+  cursor: pointer;
+  text-decoration: underline;
+  transition: color var(--transition-base);
+}
+
+.clickable-text:hover {
+  color: var(--color-accent-blue-dark);
+}
+
+/* Ensure existing hover states don't conflict */
+.trending-player-item.clickable-player:hover,
+.new-player-item.clickable-player:hover,
+.top-player-season-item.clickable-player:hover,
+.stat-player-item.clickable-player:hover {
+  border-color: var(--color-accent-blue);
+  background: var(--color-gray-50);
+  transform: translateY(-2px);
+}
+
+/* Add a subtle hover indicator */
+.clickable-player::after {
+  content: "👁️ View Profile";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(37, 48, 70, 0.95);
+  color: white;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-base);
+  z-index: 10;
+  white-space: nowrap;
+}
+
+.clickable-player:hover::after {
+  opacity: 1;
 }
 
 /* =========================
@@ -929,7 +994,7 @@
 }
 
 .activity-text .username,
-.activity-text .player-name {
+.activity-text .player-name-dash {
   font-weight: 600;
   color: var(--color-navy-primary);
 }
@@ -1129,5 +1194,13 @@
 
   .info-tooltip:hover .tooltip-content {
     transform: translateY(4px);
+  }
+}
+
+@media (max-width: 768px) {
+  .clickable-player::after {
+    content: "👁️";
+    font-size: var(--font-size-sm);
+    padding: var(--spacing-xs);
   }
 }

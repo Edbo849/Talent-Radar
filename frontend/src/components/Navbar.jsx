@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import { Link } from "react-router-dom";
 import "./static/Navbar.css";
 
 /**
@@ -56,7 +57,7 @@ const Navbar = () => {
       <div className="navbar-container">
         {/* Left: Logo and Brand */}
         <div className="navbar-left">
-          <div className="navbar-brand">
+          <Link to="/" className="navbar-brand">
             <img
               src="/talent_radar.png"
               alt="Talent Radar"
@@ -66,7 +67,7 @@ const Navbar = () => {
               <h1 className="brand-title">Talent Radar</h1>
               <p className="brand-subtitle">Scout. Discover. Excel.</p>
             </div>
-          </div>
+          </Link>
         </div>
 
         {/* Center: Search Bar */}

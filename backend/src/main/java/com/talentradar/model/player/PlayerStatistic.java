@@ -114,9 +114,6 @@ public class PlayerStatistic {
     @Min(value = 0, message = "Key passes cannot be negative")
     private Integer passesKey = 0;
 
-    @Column(name = "pass_accuracy", precision = 5, scale = 2)
-    private BigDecimal passAccuracy;
-
     // Defensive stats
     @Column(name = "tackles_total")
     @Min(value = 0, message = "Total tackles cannot be negative")
@@ -397,14 +394,6 @@ public class PlayerStatistic {
 
     public void setPassesKey(Integer passesKey) {
         this.passesKey = passesKey;
-    }
-
-    public BigDecimal getPassAccuracy() {
-        return passAccuracy;
-    }
-
-    public void setPassAccuracy(BigDecimal passAccuracy) {
-        this.passAccuracy = passAccuracy;
     }
 
     public Integer getTacklesTotal() {
