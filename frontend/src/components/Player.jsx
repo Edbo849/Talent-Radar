@@ -69,6 +69,7 @@ const PlayerPage = () => {
 
   useEffect(() => {
     loadPlayerData();
+    trackPlayerView();
   }, [playerId]);
 
   const loadPlayerData = async () => {
@@ -111,6 +112,23 @@ const PlayerPage = () => {
         loading: false,
         error: "Failed to load player data",
       }));
+    }
+  };
+
+  const trackPlayerView = async () => {
+    try {
+      await fetch(`http://localhost:8080/api/players/${playerId}/views`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(localStorage.getItem("token") && {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          }),
+        },
+      });
+      console.log("Player view tracked successfully");
+    } catch (error) {
+      console.error("Error tracking player view:", error);
     }
   };
 

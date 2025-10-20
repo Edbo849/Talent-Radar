@@ -1,6 +1,7 @@
 package com.talentradar.service.user;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,11 +21,9 @@ import com.talentradar.dto.user.UserUpdateDTO;
 import com.talentradar.exception.UserNotFoundException;
 import com.talentradar.model.enums.BadgeLevel;
 import com.talentradar.model.enums.UserRole;
-import com.talentradar.model.player.PlayerRating;
 import com.talentradar.model.player.PlayerView;
 import com.talentradar.model.user.User;
 import com.talentradar.model.user.UserFollow;
-import com.talentradar.repository.player.PlayerRatingRepository;
 import com.talentradar.repository.player.PlayerViewRepository;
 import com.talentradar.repository.scouting.ScoutingReportRepository;
 import com.talentradar.repository.user.UserFollowRepository;
@@ -57,9 +56,6 @@ public class UserService {
 
     @Autowired
     private PlayerViewRepository playerViewRepository;
-
-    @Autowired
-    private PlayerRatingRepository playerRatingRepository;
 
     @Autowired
     private ScoutingReportRepository scoutingReportRepository;
@@ -349,30 +345,56 @@ public class UserService {
         Map<String, Object> activity = new HashMap<>();
 
         try {
+            if (user == null) {
+                logger.warn("Null user provided to getUserActivityStats");
+                return activity;
+            }
+
             // Recent activity counts
             LocalDateTime weekAgo = LocalDateTime.now().minusDays(7);
 
-            // Get weekly views
-            Long weeklyViews = playerViewRepository.countByUserAndViewedAtAfter(user, weekAgo);
+            // Get weekly views safely
+            Long weeklyViews = 0L;
+            try {
+                weeklyViews = playerViewRepository.countByUserAndViewedAtAfter(user, weekAgo);
+            } catch (Exception e) {
+                logger.warn("Could not retrieve weekly views for user {}: {}", user.getUsername(), e.getMessage());
+            }
             activity.put("weeklyViews", weeklyViews);
 
-            // Get total reports by user
-            Long totalReports = scoutingReportRepository.countByScout(user);
+            // Get total reports safely
+            Long totalReports = 0L;
+            try {
+                totalReports = scoutingReportRepository.countByScout(user);
+            } catch (Exception e) {
+                logger.warn("Could not retrieve total reports for user {}: {}", user.getUsername(), e.getMessage());
+            }
             activity.put("totalReports", totalReports);
 
-            // Get recent views
-            List<PlayerView> recentViews = playerViewRepository.findTop20ByUserOrderByCreatedAtDesc(user);
+            // Get recent views as DTOs instead of entities
+            List<Map<String, Object>> recentViews = new ArrayList<>();
+            try {
+                List<PlayerView> viewEntities = playerViewRepository.findTop20ByUserOrderByCreatedAtDesc(user);
+                recentViews = viewEntities.stream().map(view -> {
+                    Map<String, Object> viewDto = new HashMap<>();
+                    viewDto.put("id", view.getId());
+                    viewDto.put("playerId", view.getPlayer().getId());
+                    viewDto.put("playerName", view.getPlayer().getName());
+                    viewDto.put("viewedAt", view.getViewedAt());
+                    viewDto.put("createdAt", view.getCreatedAt());
+                    return viewDto;
+                }).collect(Collectors.toList());
+            } catch (Exception e) {
+                logger.warn("Could not retrieve recent views for user {}: {}", user.getUsername(), e.getMessage());
+            }
             activity.put("recentViews", recentViews);
 
-            // Get recent ratings
-            List<PlayerRating> recentRatings = playerRatingRepository.findByUserAndIsActiveTrueOrderByCreatedAtDesc(user)
-                    .stream().limit(10).collect(Collectors.toList());
-            activity.put("recentRatings", recentRatings);
+            return activity;
 
-            return activity;
         } catch (Exception e) {
-            logger.error("Error retrieving user activity stats: {}", e.getMessage());
-            return activity;
+            logger.error("Error retrieving user activity stats for user {}: {}",
+                    user != null ? user.getUsername() : "null", e.getMessage(), e);
+            return activity; // Return empty map instead of throwing
         }
     }
 
