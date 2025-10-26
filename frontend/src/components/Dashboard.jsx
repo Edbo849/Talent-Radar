@@ -39,6 +39,18 @@ const CountryFlag = ({ nationality, className = "nationality-flag" }) => {
   return <span className={className}>{flag.value}</span>;
 };
 
+// Helper function to get rating color class
+const getRatingColorClass = (rating) => {
+  if (!rating) return "rating-na";
+  const numRating = parseFloat(rating);
+  if (numRating < 5) return "rating-red";
+  if (numRating < 6) return "rating-orange";
+  if (numRating < 7) return "rating-yellow";
+  if (numRating < 8) return "rating-green";
+  if (numRating < 9) return "rating-light-blue";
+  return "rating-dark-blue";
+};
+
 /**
  * Dashboard component - main application interface after login
  * Contains role-based content for different user types
@@ -61,10 +73,90 @@ const Dashboard = () => {
     loading: true,
   });
 
+  const [selectedLeague, setSelectedLeague] = useState(null);
+  const [leagues, setLeagues] = useState([]);
+  const [leagueSearchQuery, setLeagueSearchQuery] = useState("");
+  const [showLeagueDropdown, setShowLeagueDropdown] = useState(false);
+  const [filteredPlayers, setFilteredPlayers] = useState([]);
+  const [loadingLeagues, setLoadingLeagues] = useState(false);
+
   useEffect(() => {
     FlagService.loadCountries();
     loadDashboardData();
   }, [user, token]);
+
+  useEffect(() => {
+    loadLeagues();
+  }, []);
+
+  useEffect(() => {
+    if (selectedLeague) {
+      loadPlayersByLeague(selectedLeague.id);
+    } else {
+      setFilteredPlayers(dashboardData.topRatedPlayersSeason);
+    }
+  }, [selectedLeague, dashboardData.topRatedPlayersSeason]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.target.closest(".league-filter-container")) {
+        setShowLeagueDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const loadLeagues = async () => {
+    try {
+      setLoadingLeagues(true);
+      const response = await ApiService.getAllLeagues();
+      setLeagues(response.content || response);
+    } catch (error) {
+      console.error("Error loading leagues:", error);
+    } finally {
+      setLoadingLeagues(false);
+    }
+  };
+
+  const loadPlayersByLeague = async (leagueId) => {
+    try {
+      const response = await ApiService.getTopRatedPlayersByLeague(
+        leagueId,
+        50
+      );
+      setFilteredPlayers(response);
+    } catch (error) {
+      console.error("Error loading players by league:", error);
+      setFilteredPlayers([]);
+    }
+  };
+
+  const handleLeagueSelect = (league) => {
+    setSelectedLeague(league);
+    setLeagueSearchQuery(league.name);
+    setShowLeagueDropdown(false);
+  };
+
+  const clearLeagueFilter = () => {
+    setSelectedLeague(null);
+    setLeagueSearchQuery("");
+    setFilteredPlayers(dashboardData.topRatedPlayersSeason);
+  };
+
+  const filteredLeagues = leagues.filter((league) =>
+    league.name.toLowerCase().includes(leagueSearchQuery.toLowerCase())
+  );
+
+  const currentPlayers = selectedLeague
+    ? filteredPlayers
+    : dashboardData.topRatedPlayersSeason;
+  const displayedPlayers = dashboardData.showMorePlayers
+    ? currentPlayers
+    : currentPlayers.slice(0, 10);
 
   // Function to navigate to player page
   const handlePlayerClick = (playerId) => {
@@ -209,6 +301,17 @@ const Dashboard = () => {
             activePolls={dashboardData.activePolls}
             myActivity={dashboardData.myActivity}
             topRatedPlayersSeason={dashboardData.topRatedPlayersSeason}
+            selectedLeague={selectedLeague}
+            leagues={leagues}
+            leagueSearchQuery={leagueSearchQuery}
+            showLeagueDropdown={showLeagueDropdown}
+            filteredPlayers={filteredPlayers}
+            loadingLeagues={loadingLeagues}
+            filteredLeagues={filteredLeagues}
+            setLeagueSearchQuery={setLeagueSearchQuery}
+            setShowLeagueDropdown={setShowLeagueDropdown}
+            handleLeagueSelect={handleLeagueSelect}
+            clearLeagueFilter={clearLeagueFilter}
             onPlayerClick={handlePlayerClick}
             onLoadMorePlayers={loadMorePlayers}
           />
@@ -227,6 +330,17 @@ const UserDashboard = ({
   activePolls,
   myActivity,
   topRatedPlayersSeason,
+  selectedLeague,
+  leagues,
+  leagueSearchQuery,
+  showLeagueDropdown,
+  filteredPlayers,
+  loadingLeagues,
+  filteredLeagues,
+  setLeagueSearchQuery,
+  setShowLeagueDropdown,
+  handleLeagueSelect,
+  clearLeagueFilter,
   onPlayerClick,
   onLoadMorePlayers,
 }) => {
@@ -241,10 +355,12 @@ const UserDashboard = ({
       console.error("Error loading more players:", error);
     }
   };
-
+  const currentPlayers = selectedLeague
+    ? filteredPlayers
+    : topRatedPlayersSeason;
   const displayedPlayers = showMorePlayers
-    ? allPlayers
-    : topRatedPlayersSeason.slice(0, 10);
+    ? currentPlayers
+    : currentPlayers.slice(0, 10);
 
   return (
     <div className="dashboard-grid">
@@ -252,15 +368,7 @@ const UserDashboard = ({
       <div className="dashboard-section col-span-4">
         <div className="card">
           <div className="card-header">
-            <h3 className="card-title">
-              <div className="info-tooltip">
-                <span className="info-icon">ⓘ</span>
-                <div className="tooltip-content">
-                  Most viewed players over the last week
-                </div>
-              </div>
-              🔥 Trending Players
-            </h3>
+            <h3 className="card-title">🔥 Trending Players</h3>
             <button className="view-all-btn">View All</button>
           </div>
           <div className="card-content">
@@ -268,7 +376,7 @@ const UserDashboard = ({
               {trendingPlayers.map((player) => (
                 <div
                   key={player.id}
-                  className="trending-player-item clickable-player"
+                  className="trending-player-item"
                   onClick={() => onPlayerClick(player.id)}
                 >
                   <div className="player-avatar">
@@ -328,16 +436,83 @@ const UserDashboard = ({
       <div className="dashboard-section col-span-8">
         <div className="card">
           <div className="card-header">
-            <h3 className="card-title">
-              <div className="info-tooltip">
-                <span className="info-icon">ⓘ</span>
-                <div className="tooltip-content">
-                  Highest rated players with 1000+ minutes played this season
+            <h3 className="card-title">🏆 Best Players this Season</h3>
+            <div className="header-controls">
+              <div className="league-filter-container">
+                <div className="league-search-wrapper">
+                  <input
+                    type="text"
+                    placeholder="Search leagues..."
+                    value={leagueSearchQuery}
+                    onChange={(e) => {
+                      setLeagueSearchQuery(e.target.value);
+                      setShowLeagueDropdown(true);
+                    }}
+                    onFocus={() => setShowLeagueDropdown(true)}
+                    className="league-search-input"
+                  />
+                  {selectedLeague && (
+                    <button
+                      onClick={clearLeagueFilter}
+                      className="clear-filter-btn"
+                      title="Clear filter"
+                    >
+                      ✕
+                    </button>
+                  )}
+                  {showLeagueDropdown && (
+                    <div className="league-dropdown">
+                      {loadingLeagues ? (
+                        <div className="dropdown-loading">
+                          Loading leagues...
+                        </div>
+                      ) : (
+                        <>
+                          {!selectedLeague && (
+                            <div
+                              className="dropdown-item"
+                              onClick={() => {
+                                clearLeagueFilter();
+                                setShowLeagueDropdown(false);
+                              }}
+                            >
+                              <span>All Leagues</span>
+                            </div>
+                          )}
+                          {filteredLeagues.slice(0, 10).map((league) => (
+                            <div
+                              key={league.id}
+                              className="dropdown-item"
+                              onClick={() => handleLeagueSelect(league)}
+                            >
+                              {league.logoUrl && (
+                                <img
+                                  src={league.logoUrl}
+                                  alt={league.name}
+                                  className="league-logo-small"
+                                />
+                              )}
+                              <span>{league.name}</span>
+                              {league.country && (
+                                <span className="league-country">
+                                  {league.country.name}
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                          {filteredLeagues.length === 0 && (
+                            <div className="dropdown-item disabled">
+                              No leagues found
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
-              🏆 Best Players this Season
-            </h3>
-            <button className="view-all-btn">View All</button>
+              <button className="view-all-btn">View All</button>
+            </div>
           </div>
           <div className="card-content">
             <div className="top-players-season-grid">
@@ -399,7 +574,11 @@ const UserDashboard = ({
                     </span>
                   </div>
                   <div className="player-rating">
-                    <div className="rating-score">
+                    <div
+                      className={`rating-score ${getRatingColorClass(
+                        player.rating
+                      )}`}
+                    >
                       {player.rating ? player.rating.toFixed(1) : "N/A"}
                     </div>
                     <div className="rating-label">Rating</div>
@@ -432,15 +611,7 @@ const UserDashboard = ({
       <div className="dashboard-section col-span-4">
         <div className="card">
           <div className="card-header">
-            <h3 className="card-title">
-              <div className="info-tooltip">
-                <span className="info-icon">ⓘ</span>
-                <div className="tooltip-content">
-                  Highest rated players based on coach and scout opinions
-                </div>
-              </div>
-              ⭐ Top Rated Players
-            </h3>
+            <h3 className="card-title">⭐ Top Rated Players</h3>
             <button className="view-all-btn">View All</button>
           </div>
           <div className="card-content">
@@ -517,15 +688,7 @@ const UserDashboard = ({
       <div className="dashboard-section col-span-4">
         <div className="card">
           <div className="card-header">
-            <h3 className="card-title">
-              <div className="info-tooltip">
-                <span className="info-icon">ⓘ</span>
-                <div className="tooltip-content">
-                  Most popular active discussions
-                </div>
-              </div>
-              💬 Most Active Discussions
-            </h3>
+            <h3 className="card-title">💬 Most Active Discussions</h3>
             <button className="view-all-btn">View All</button>
           </div>
           <div className="card-content">

@@ -1,5 +1,6 @@
 package com.talentradar.service.player;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,12 +21,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.talentradar.dto.player.PlayerDTO;
 import com.talentradar.exception.PlayerNotFoundException;
+import com.talentradar.model.club.League;
 import com.talentradar.model.player.Player;
 import com.talentradar.model.player.PlayerInjury;
 import com.talentradar.model.player.PlayerStatistic;
 import com.talentradar.model.player.PlayerTransfer;
 import com.talentradar.model.player.PlayerView;
 import com.talentradar.model.user.User;
+import com.talentradar.repository.club.LeagueRepository;
 import com.talentradar.repository.player.PlayerRatingRepository;
 import com.talentradar.repository.player.PlayerRepository;
 import com.talentradar.repository.player.PlayerStatisticRepository;
@@ -52,6 +55,9 @@ public class PlayerService {
 
     @Autowired
     private PlayerRatingRepository playerRatingRepository;
+
+    @Autowired
+    private LeagueRepository leagueRepository;
 
     /**
      * Retrieves the current status of scheduled tasks.
@@ -876,6 +882,53 @@ public class PlayerService {
         } catch (Exception e) {
             logger.error("Error filtering players: {}", e.getMessage());
             throw new RuntimeException("Failed to filter players", e);
+        }
+    }
+
+    /**
+     * Get top rated players by league for current season
+     */
+    @Transactional(readOnly = true)
+    public List<Player> getTopRatedPlayersByLeague(Long leagueId, int limit) {
+        try {
+            if (leagueId == null) {
+                throw new IllegalArgumentException("League ID cannot be null");
+            }
+
+            Optional<League> league = leagueRepository.findById(leagueId);
+            if (league.isEmpty()) {
+                throw new IllegalArgumentException("League not found with ID: " + leagueId);
+            }
+
+            logger.info("Searching for players in league: {} (ID: {})", league.get().getName(), leagueId);
+
+            // Try current season first (2025)
+            List<PlayerStatistic> topRatedStats = playerStatisticRepository
+                    .findByLeagueAndSeasonOrderByRatingDesc(league.get(), 2025);
+
+            logger.info("Found {} player statistics for season 2025", topRatedStats.size());
+
+            // If no results for 2025, try 2024
+            if (topRatedStats.isEmpty()) {
+                topRatedStats = playerStatisticRepository
+                        .findByLeagueAndSeasonOrderByRatingDesc(league.get(), 2024);
+                logger.info("Found {} player statistics for season 2024", topRatedStats.size());
+            }
+
+            // Filter by rating and limit results
+            List<Player> players = topRatedStats.stream()
+                    .filter(stat -> stat.getRating() != null && stat.getRating().compareTo(BigDecimal.ZERO) > 0)
+                    .limit(limit)
+                    .map(PlayerStatistic::getPlayer)
+                    .distinct()
+                    .collect(Collectors.toList());
+
+            logger.info("Returning {} players for league {}", players.size(), league.get().getName());
+            return players;
+
+        } catch (IllegalArgumentException e) {
+            logger.error("Error getting top rated players for league {}: {}", leagueId, e.getMessage(), e);
+            throw new RuntimeException("Failed to get top rated players for league", e);
         }
     }
 

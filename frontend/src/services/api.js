@@ -269,6 +269,59 @@ class ApiService {
     );
     return response;
   }
+
+  async getAllLeagues(page = 0, size = 500) {
+    // Increase size to get more leagues
+    try {
+      const response = await this.request(
+        `/leagues?page=${page}&size=${size}`,
+        "GET"
+      );
+
+      // If it's paginated, get all pages
+      if (response.content) {
+        let allLeagues = [...response.content];
+        let currentPage = 0;
+        const totalPages = response.totalPages;
+
+        // Fetch remaining pages if there are more
+        while (currentPage + 1 < totalPages && currentPage < 10) {
+          // Limit to prevent infinite loop
+          currentPage++;
+          try {
+            const nextPageResponse = await this.request(
+              `/leagues?page=${currentPage}&size=${size}`,
+              "GET"
+            );
+            allLeagues = [...allLeagues, ...nextPageResponse.content];
+          } catch (error) {
+            console.warn(`Failed to fetch page ${currentPage}:`, error);
+            break;
+          }
+        }
+
+        return { content: allLeagues, totalElements: allLeagues.length };
+      }
+
+      return response;
+    } catch (error) {
+      console.error("Error fetching leagues:", error);
+      throw error;
+    }
+  }
+
+  async getTopRatedPlayersByLeague(leagueId, limit = 25) {
+    try {
+      const response = await this.request(
+        `/players/top-rated-by-league/${leagueId}?limit=${limit}`,
+        "GET"
+      );
+      return response;
+    } catch (error) {
+      console.error("Error fetching players by league:", error);
+      throw error;
+    }
+  }
 }
 
 // Export a singleton instance of ApiService

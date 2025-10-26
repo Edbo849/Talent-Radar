@@ -33,6 +33,7 @@ import com.talentradar.model.player.PlayerTrophy;
 import com.talentradar.service.player.PlayerService;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.constraints.Positive;
 
 /**
  * REST controller for managing player information and retrieval. Provides
@@ -462,6 +463,28 @@ public class PlayerController {
         } catch (Exception e) {
             logger.error("Error retrieving trophies for player: {}", playerId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * Get top rated players by league
+     */
+    @GetMapping("/top-rated-by-league/{leagueId}")
+    public ResponseEntity<List<PlayerDTO>> getTopRatedPlayersByLeague(
+            @PathVariable @Positive Long leagueId,
+            @RequestParam(defaultValue = "25") int limit,
+            HttpServletRequest request) {
+        try {
+            List<Player> players = playerService.getTopRatedPlayersByLeague(leagueId, limit);
+            List<PlayerDTO> playerDTOs = players.stream()
+                    .map(player -> playerService.convertToDTO(player))
+                    .toList();
+
+            logger.info("Retrieved {} top rated players for league ID: {}", playerDTOs.size(), leagueId);
+            return ResponseEntity.ok(playerDTOs);
+        } catch (Exception e) {
+            logger.error("Error retrieving top rated players for league ID: {}", leagueId, e);
+            return ResponseEntity.internalServerError().build();
         }
     }
 
