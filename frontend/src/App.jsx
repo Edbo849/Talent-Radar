@@ -10,6 +10,7 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import AuthContainer from "./components/AuthContainer";
 import Dashboard from "./components/Dashboard";
 import Player from "./components/Player";
+import SearchPage from "./components/Search";
 import "./App.css";
 import "./components/static/Auth.css";
 import "./utilities.css";
@@ -36,6 +37,7 @@ function AppContent() {
       <Route path="/" element={<Dashboard />} />
       <Route path="/player/:playerId" element={<Player />} />
       <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="/search" element={<SearchPage />} />
     </Routes>
   );
 }

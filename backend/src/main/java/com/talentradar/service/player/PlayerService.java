@@ -142,7 +142,7 @@ public class PlayerService {
             if (name == null || name.trim().isEmpty()) {
                 throw new IllegalArgumentException("Search name cannot be null or empty");
             }
-            return playerRepository.findByNameContainingIgnoreCase(name.trim());
+            return playerRepository.findByFirstNameOrLastNameContainingIgnoreCase(name.trim());
         } catch (IllegalArgumentException e) {
             logger.error("Invalid search parameter: {}", e.getMessage());
             throw e;
@@ -788,8 +788,8 @@ public class PlayerService {
      * Retrieves the current status of scheduled tasks.
      */
     @Transactional(readOnly = true)
-    public Page<Player> searchPlayers(String query, String position, String nationality,
-            String sortBy, Pageable pageable) {
+    public Page<Player> searchPlayers(String query, String position, String nationality, String league,
+            Integer minAge, Integer maxAge, String sortBy, Pageable pageable) {
         try {
             if (pageable == null) {
                 throw new IllegalArgumentException("Pageable cannot be null");
@@ -797,22 +797,83 @@ public class PlayerService {
 
             Sort sort = switch (sortBy != null ? sortBy : "") {
                 case "name" ->
-                    Sort.by(Sort.Direction.ASC, "name");
+                    Sort.by(Sort.Direction.ASC, "firstName", "lastName");
                 case "age" ->
                     Sort.by(Sort.Direction.ASC, "dateOfBirth");
                 case "views" ->
                     Sort.by(Sort.Direction.DESC, "totalViews");
                 default ->
-                    Sort.by(Sort.Direction.DESC, "trendingScore"); // Default sort
+                    Sort.by(Sort.Direction.DESC, "trendingScore");
             };
 
             Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(),
                     pageable.getPageSize(), sort);
 
+            // Handle search with query
             if (query != null && !query.trim().isEmpty()) {
-                return playerRepository.findByNameContainingIgnoreCase(query.trim(), sortedPageable);
+                // Build a filtered query using specifications or repository methods
+                boolean hasPositionFilter = position != null && !position.trim().isEmpty();
+                boolean hasNationalityFilter = nationality != null && !nationality.trim().isEmpty();
+                boolean hasLeagueFilter = league != null && !league.trim().isEmpty();
+                boolean hasAgeFilter = minAge != null || maxAge != null;
+
+                if (hasPositionFilter || hasNationalityFilter || hasLeagueFilter || hasAgeFilter) {
+                    // Get all matching players first
+                    List<Player> allMatchingPlayers = playerRepository
+                            .findByFirstNameOrLastNameContainingIgnoreCase(query.trim());
+
+                    // Apply filters
+                    List<Player> filteredPlayers = allMatchingPlayers.stream()
+                            .filter(p -> {
+                                boolean matches = true;
+
+                                // Position filter - map display names to position codes
+                                if (hasPositionFilter) {
+                                    matches = position.equalsIgnoreCase(p.getPosition());
+                                }
+
+                                // Nationality filter
+                                if (matches && hasNationalityFilter) {
+                                    matches = nationality.trim().equalsIgnoreCase(p.getNationality());
+                                }
+
+                                // League filter
+                                if (matches && hasLeagueFilter) {
+                                    matches = playerHasLeague(p, league.trim());
+                                }
+
+                                // Age filter
+                                if (matches && hasAgeFilter) {
+                                    int playerAge = p.getAge();
+                                    if (minAge != null && playerAge < minAge) {
+                                        matches = false;
+                                    }
+                                    if (maxAge != null && playerAge > maxAge) {
+                                        matches = false;
+                                    }
+                                }
+
+                                return matches;
+                            })
+                            .toList();
+
+                    // Apply pagination manually
+                    int start = (int) sortedPageable.getOffset();
+                    int end = Math.min((start + sortedPageable.getPageSize()), filteredPlayers.size());
+
+                    List<Player> pageContent = start < filteredPlayers.size()
+                            ? filteredPlayers.subList(start, end)
+                            : List.of();
+
+                    return new PageImpl<>(pageContent, sortedPageable, filteredPlayers.size());
+                }
+
+                // No additional filters - use repository pagination directly
+                return playerRepository.findByFirstNameOrLastNameContainingIgnoreCase(
+                        query.trim(), sortedPageable);
             }
 
+            // No query - return all active players
             return playerRepository.findByIsActiveTrue(sortedPageable);
 
         } catch (IllegalArgumentException e) {
@@ -822,6 +883,20 @@ public class PlayerService {
             logger.error("Error searching players: {}", e.getMessage());
             throw new RuntimeException("Failed to search players", e);
         }
+    }
+
+    /**
+     * Check if player belongs to a specific league
+     */
+    private boolean playerHasLeague(Player player, String leagueName) {
+        if (player.getStatistics() == null || player.getStatistics().isEmpty()) {
+            return false;
+        }
+
+        // Check if any of the player's statistics are for the specified league
+        return player.getStatistics().stream()
+                .anyMatch(stat -> stat.getLeague() != null
+                && leagueName.equalsIgnoreCase(stat.getLeague().getName()));
     }
 
     /**

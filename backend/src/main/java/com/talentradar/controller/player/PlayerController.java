@@ -113,8 +113,14 @@ public class PlayerController {
     @GetMapping("/search")
     public ResponseEntity<Page<PlayerDTO>> searchPlayers(
             @RequestParam String query,
+            @RequestParam(required = false) String position,
+            @RequestParam(required = false) String nationality,
+            @RequestParam(required = false) String league,
+            @RequestParam(required = false) Integer minAge,
+            @RequestParam(required = false) Integer maxAge,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "9") int size,
+            @RequestParam(defaultValue = "trending") String sortBy,
             HttpServletRequest request) {
 
         try {
@@ -125,12 +131,25 @@ public class PlayerController {
 
             Pageable pageable = PageRequest.of(page, size);
 
-            logger.debug("Searching players with query: {}", query);
+            logger.info("Searching players - query: '{}', position: '{}', nationality: '{}', league: '{}', age: {}-{}, page: {}, size: {}",
+                    query, position, nationality, league, minAge, maxAge, page, size);
 
-            Page<Player> players = playerService.searchPlayers(query, "", "", "", pageable);
+            Page<Player> players = playerService.searchPlayers(
+                    query,
+                    position != null ? position : "",
+                    nationality != null ? nationality : "",
+                    league != null ? league : "",
+                    minAge,
+                    maxAge,
+                    sortBy,
+                    pageable
+            );
+
             Page<PlayerDTO> playerDTOs = players.map(this::convertToDTO);
 
-            logger.info("Found {} players matching query: {}", playerDTOs.getTotalElements(), query);
+            logger.info("Found {} total players matching query: {} (page {} of {})",
+                    playerDTOs.getTotalElements(), query, page + 1, playerDTOs.getTotalPages());
+
             return ResponseEntity.ok(playerDTOs);
         } catch (Exception e) {
             logger.error("Error searching players with query: {}", query, e);
@@ -485,6 +504,41 @@ public class PlayerController {
         } catch (Exception e) {
             logger.error("Error retrieving top rated players for league ID: {}", leagueId, e);
             return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    /**
+     * Quick search suggestions for autocomplete
+     */
+    @GetMapping("/search-suggestions")
+    public ResponseEntity<List<PlayerDTO>> getSearchSuggestions(
+            @RequestParam String q,
+            HttpServletRequest request) {
+        try {
+            if (q == null || q.trim().isEmpty()) {
+                return ResponseEntity.ok(List.of());
+            }
+
+            // Get top 5 matching players for suggestions
+            Pageable pageable = PageRequest.of(0, 5);
+            Page<Player> players = playerService.searchPlayers(
+                    q, // query
+                    "", // position
+                    "", // nationality
+                    "", // league
+                    null, // minAge
+                    null, // maxAge
+                    "trending", // sortBy
+                    pageable // pageable
+            );
+            List<PlayerDTO> playerDTOs = players.getContent().stream()
+                    .map(this::convertToDTO)
+                    .toList();
+
+            return ResponseEntity.ok(playerDTOs);
+        } catch (Exception e) {
+            logger.error("Error retrieving search suggestions", e);
+            return ResponseEntity.ok(List.of());
         }
     }
 

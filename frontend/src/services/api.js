@@ -322,6 +322,37 @@ class ApiService {
       throw error;
     }
   }
+
+  async searchPlayers(params) {
+    try {
+      const queryParams = new URLSearchParams();
+      Object.entries(params).forEach(([key, value]) => {
+        if (value) queryParams.append(key, value);
+      });
+
+      const response = await this.request(
+        `/players/search?${queryParams.toString()}`,
+        "GET"
+      );
+      return response;
+    } catch (error) {
+      console.error("Error searching players:", error);
+      throw error;
+    }
+  }
+
+  async searchPlayersSuggestions(query) {
+    try {
+      const response = await this.request(
+        `/players/search-suggestions?q=${encodeURIComponent(query)}`,
+        "GET"
+      );
+      return response;
+    } catch (error) {
+      console.error("Error fetching search suggestions:", error);
+      return [];
+    }
+  }
 }
 
 // Export a singleton instance of ApiService

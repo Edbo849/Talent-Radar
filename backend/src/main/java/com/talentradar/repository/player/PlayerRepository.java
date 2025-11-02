@@ -34,6 +34,20 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
     // Search with pagination
     Page<Player> findByNameContainingIgnoreCase(String name, Pageable pageable);
 
+    // Search by first name or last name with pagination
+    @Query("SELECT p FROM Player p WHERE "
+            + "LOWER(p.firstName) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR "
+            + "LOWER(p.lastName) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR "
+            + "LOWER(CONCAT(p.firstName, ' ', p.lastName)) LIKE LOWER(CONCAT('%', :searchTerm, '%'))")
+    Page<Player> findByFirstNameOrLastNameContainingIgnoreCase(@Param("searchTerm") String searchTerm, Pageable pageable);
+
+    // Search by first name or last name without pagination
+    @Query("SELECT p FROM Player p WHERE "
+            + "LOWER(p.firstName) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR "
+            + "LOWER(p.lastName) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR "
+            + "LOWER(CONCAT(p.firstName, ' ', p.lastName)) LIKE LOWER(CONCAT('%', :searchTerm, '%'))")
+    List<Player> findByFirstNameOrLastNameContainingIgnoreCase(@Param("searchTerm") String searchTerm);
+
     /* Status-based finder methods */
     // Find active players only
     List<Player> findByIsActiveTrue();

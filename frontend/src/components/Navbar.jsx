@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import ApiService from "../services/api";
 import "./static/Navbar.css";
 
 /**
@@ -9,8 +10,49 @@ import "./static/Navbar.css";
  */
 const Navbar = () => {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [searchSuggestions, setSearchSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const searchRef = useRef(null);
+
+  // Load search suggestions
+  useEffect(() => {
+    const loadSuggestions = async () => {
+      if (searchQuery.trim().length < 2) {
+        setSearchSuggestions([]);
+        return;
+      }
+
+      setLoadingSuggestions(true);
+      try {
+        const response = await ApiService.searchPlayersSuggestions(searchQuery);
+        setSearchSuggestions(response.slice(0, 5)); // Show top 5 results
+      } catch (error) {
+        console.error("Error loading suggestions:", error);
+        setSearchSuggestions([]);
+      } finally {
+        setLoadingSuggestions(false);
+      }
+    };
+
+    const debounceTimer = setTimeout(loadSuggestions, 300);
+    return () => clearTimeout(debounceTimer);
+  }, [searchQuery]);
+
+  // Close suggestions when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   /**
    * Handle search form submission
@@ -18,8 +60,8 @@ const Navbar = () => {
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      // TODO: Implement search functionality
-      console.log("Searching for:", searchQuery);
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      setShowSuggestions(false);
     }
   };
 
@@ -31,6 +73,15 @@ const Navbar = () => {
   };
 
   /**
+   * Handle clicking on a search suggestion
+   */
+  const handleSuggestionClick = (playerId) => {
+    navigate(`/player/${playerId}`);
+    setSearchQuery("");
+    setShowSuggestions(false);
+  };
+
+  /**
    * Toggle profile dropdown menu
    */
   const toggleProfileMenu = () => {
@@ -38,42 +89,28 @@ const Navbar = () => {
   };
 
   /**
-   * Close profile menu when clicking outside
-   */
-  const closeProfileMenu = () => {
-    setIsProfileMenuOpen(false);
-  };
-
-  /**
    * Handle logout
    */
   const handleLogout = () => {
     logout();
-    closeProfileMenu();
+    navigate("/");
   };
 
   return (
     <nav className="navbar">
-      <div className="navbar-container">
-        {/* Left: Logo and Brand */}
-        <div className="navbar-left">
-          <Link to="/" className="navbar-brand">
-            <img
-              src="/talent_radar.png"
-              alt="Talent Radar"
-              className="navbar-logo"
-            />
-            <div className="brand-text">
-              <h1 className="brand-title">Talent Radar</h1>
-              <p className="brand-subtitle">Scout. Discover. Excel.</p>
-            </div>
-          </Link>
-        </div>
+      <div className="navbar-content">
+        <Link to="/dashboard" className="navbar-brand">
+          <img
+            src="/talent_radar.png"
+            alt="Talent Radar"
+            className="brand-logo"
+          />
+          <span className="brand-text">TalentRadar</span>
+        </Link>
 
-        {/* Center: Search Bar */}
-        <div className="navbar-center">
+        <div className="navbar-search" ref={searchRef}>
           <form onSubmit={handleSearch} className="search-form">
-            <div className="search-container">
+            <div className="search-input-wrapper">
               <div className="search-icon">
                 <svg
                   width="20"
@@ -94,39 +131,86 @@ const Navbar = () => {
                 placeholder="Search players, clubs, leagues..."
                 value={searchQuery}
                 onChange={handleSearchChange}
+                onFocus={() => setShowSuggestions(true)}
                 className="search-input"
               />
               {searchQuery && (
                 <button
                   type="button"
-                  onClick={() => setSearchQuery("")}
+                  onClick={() => {
+                    setSearchQuery("");
+                    setSearchSuggestions([]);
+                  }}
                   className="search-clear"
                 >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                  </svg>
+                  ✕
                 </button>
               )}
             </div>
+
+            {/* Search Suggestions Dropdown */}
+            {showSuggestions && searchQuery.trim().length >= 2 && (
+              <div className="search-suggestions">
+                {loadingSuggestions ? (
+                  <div className="suggestion-loading">Searching...</div>
+                ) : searchSuggestions.length > 0 ? (
+                  <>
+                    {searchSuggestions.map((player) => (
+                      <div
+                        key={player.id}
+                        className="suggestion-item"
+                        onClick={() => handleSuggestionClick(player.id)}
+                      >
+                        <div className="suggestion-avatar">
+                          {player.photoUrl ? (
+                            <img src={player.photoUrl} alt={player.name} />
+                          ) : (
+                            <div className="suggestion-placeholder">
+                              {player.name.charAt(0)}
+                            </div>
+                          )}
+                        </div>
+                        <div className="suggestion-info">
+                          <div className="suggestion-name">{player.name}</div>
+                          <div className="suggestion-details">
+                            {player.position} • {player.age} years
+                            {player.currentClubName &&
+                              ` • ${player.currentClubName}`}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    <div className="suggestion-footer">
+                      <button
+                        type="submit"
+                        className="view-all-results-btn"
+                        onClick={handleSearch}
+                      >
+                        View all results for "{searchQuery}"
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <div className="suggestion-empty">
+                    No players found. Press Enter to search.
+                  </div>
+                )}
+              </div>
+            )}
           </form>
         </div>
 
-        {/* Right: Profile Menu */}
-        <div className="navbar-right">
-          <div className="profile-section">
-            {/* Notifications (placeholder) */}
-            <button className="notification-btn">
+        <div className="navbar-actions">
+          <div className="user-menu">
+            <button className="user-button" onClick={toggleProfileMenu}>
+              <div className="user-avatar">
+                {user.displayName?.charAt(0) || user.username?.charAt(0)}
+              </div>
+              <span className="user-name">
+                {user.displayName || user.username}
+              </span>
               <svg
+                className={`dropdown-arrow ${isProfileMenuOpen ? "open" : ""}`}
                 width="20"
                 height="20"
                 viewBox="0 0 24 24"
@@ -136,152 +220,27 @@ const Navbar = () => {
                 strokeLinecap="round"
                 strokeLinejoin="round"
               >
-                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                <polyline points="6 9 12 15 18 9"></polyline>
               </svg>
-              <span className="notification-badge">3</span>
             </button>
 
-            {/* Profile Dropdown */}
-            <div className="profile-dropdown">
-              <button
-                onClick={toggleProfileMenu}
-                className="profile-trigger"
-                aria-expanded={isProfileMenuOpen}
-              >
-                <div className="profile-avatar">
-                  {user.profileImageUrl ? (
-                    <img
-                      src={user.profileImageUrl}
-                      alt={user.displayName || user.username}
-                      className="avatar-image"
-                    />
-                  ) : (
-                    <div className="avatar-placeholder">
-                      {(user.displayName || user.username)
-                        .charAt(0)
-                        .toUpperCase()}
-                    </div>
-                  )}
-                </div>
-                <div className="profile-info">
-                  <span className="profile-name">
-                    {user.displayName || user.username}
-                  </span>
-                  <span className="profile-role">{user.role}</span>
-                </div>
-                <div className="dropdown-arrow">
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className={isProfileMenuOpen ? "rotated" : ""}
-                  >
-                    <polyline points="6,9 12,15 18,9"></polyline>
-                  </svg>
-                </div>
-              </button>
-
-              {/* Dropdown Menu */}
-              {isProfileMenuOpen && (
-                <>
-                  <div
-                    className="dropdown-overlay"
-                    onClick={closeProfileMenu}
-                  ></div>
-                  <div className="dropdown-menu">
-                    <div className="dropdown-header">
-                      <div className="dropdown-user-info">
-                        <p className="dropdown-user-name">
-                          {user.displayName || user.username}
-                        </p>
-                        <p className="dropdown-user-email">{user.email}</p>
-                      </div>
-                    </div>
-                    <div className="dropdown-divider"></div>
-                    <div className="dropdown-items">
-                      <button className="dropdown-item">
-                        <svg
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                          <circle cx="12" cy="7" r="4"></circle>
-                        </svg>
-                        <span>Profile</span>
-                      </button>
-                      <button className="dropdown-item">
-                        <svg
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <circle cx="12" cy="12" r="3"></circle>
-                          <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1"></path>
-                        </svg>
-                        <span>Settings</span>
-                      </button>
-                      <button className="dropdown-item">
-                        <svg
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                          <polyline points="16,17 21,12 16,7"></polyline>
-                          <line x1="21" y1="12" x2="9" y2="12"></line>
-                        </svg>
-                        <span>Help & Support</span>
-                      </button>
-                    </div>
-                    <div className="dropdown-divider"></div>
-                    <div className="dropdown-items">
-                      <button
-                        className="dropdown-item logout-item"
-                        onClick={handleLogout}
-                      >
-                        <svg
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                          <polyline points="16,17 21,12 16,7"></polyline>
-                          <line x1="21" y1="12" x2="9" y2="12"></line>
-                        </svg>
-                        <span>Sign Out</span>
-                      </button>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
+            {isProfileMenuOpen && (
+              <div className="dropdown-menu">
+                <Link to="/profile" className="dropdown-item">
+                  <span className="dropdown-icon">👤</span>
+                  Profile
+                </Link>
+                <Link to="/settings" className="dropdown-item">
+                  <span className="dropdown-icon">⚙️</span>
+                  Settings
+                </Link>
+                <div className="dropdown-divider"></div>
+                <button onClick={handleLogout} className="dropdown-item logout">
+                  <span className="dropdown-icon">🚪</span>
+                  Logout
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
