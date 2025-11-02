@@ -66,8 +66,6 @@ public class LeagueController {
             Page<League> leagues = leagueService.getLeaguesPaginated(pageable);
             Page<LeagueDTO> leagueDTOs = leagues.map(this::convertToDTO);
 
-            logger.debug("Retrieved {} leagues (page {}, size {})",
-                    leagues.getTotalElements(), page, size);
             return ResponseEntity.ok(leagueDTOs);
 
         } catch (Exception e) {
@@ -134,8 +132,6 @@ public class LeagueController {
             List<LeagueDTO> leagueDTOs = leagues.stream()
                     .map(this::convertToDTO)
                     .toList();
-
-            logger.debug("Retrieved {} leagues for season: {}", leagues.size(), season);
             return ResponseEntity.ok(leagueDTOs);
 
         } catch (Exception e) {
@@ -155,7 +151,6 @@ public class LeagueController {
                     .map(this::convertToDTO)
                     .toList();
 
-            logger.debug("Retrieved {} leagues for country ID: {}", leagues.size(), countryId);
             return ResponseEntity.ok(leagueDTOs);
 
         } catch (RuntimeException e) {
@@ -185,7 +180,6 @@ public class LeagueController {
                     .map(this::convertToDTO)
                     .toList();
 
-            logger.debug("Retrieved {} leagues for type: {}", leagues.size(), type);
             return ResponseEntity.ok(leagueDTOs);
 
         } catch (IllegalArgumentException e) {

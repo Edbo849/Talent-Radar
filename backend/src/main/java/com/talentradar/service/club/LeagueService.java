@@ -59,7 +59,6 @@ public class LeagueService {
     @Transactional(readOnly = true)
     public Page<League> getLeaguesPaginated(Pageable pageable) {
         try {
-            logger.debug("Retrieving leagues with pagination");
             return leagueRepository.findAllByOrderByNameAsc(pageable);
         } catch (Exception e) {
             logger.error("Error retrieving paginated leagues: {}", e.getMessage(), e);
@@ -116,7 +115,6 @@ public class LeagueService {
             if (season == null) {
                 throw new IllegalArgumentException("Season cannot be null");
             }
-            logger.debug("Retrieving leagues by season: {}", season);
             return leagueRepository.findBySeason(season);
         } catch (IllegalArgumentException e) {
             logger.error("Invalid season parameter: {}", e.getMessage());
@@ -160,7 +158,6 @@ public class LeagueService {
             Country country = countryRepository.findById(countryId)
                     .orElseThrow(() -> new CountryNotFoundException("Country not found with ID: " + countryId));
 
-            logger.debug("Retrieving leagues by country: {}", country.getName());
             return leagueRepository.findByCountryOrderByNameAsc(country);
         } catch (IllegalArgumentException | CountryNotFoundException e) {
             logger.error("Invalid country parameter: {}", e.getMessage());
@@ -180,7 +177,6 @@ public class LeagueService {
             if (type == null || type.trim().isEmpty()) {
                 throw new IllegalArgumentException("League type cannot be null or empty");
             }
-            logger.debug("Retrieving leagues by type: {}", type);
             return leagueRepository.findByTypeOrderByNameAsc(type.trim());
         } catch (IllegalArgumentException e) {
             logger.error("Invalid league type: {}", e.getMessage());
